@@ -2,8 +2,9 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "solar-radiation-calc.h"
+#include "../../03-validation/034-math-utils/math-utils.h"
 
 Status AngstromValues_Default(AngstromValues* ang) {
     if (ang == NULL) {
@@ -21,8 +22,7 @@ Status SolarRadiation_Init(SolarRadiationData* data) {
         return STATUS_NULL_POINTER;
     }
 
-    data->Rs_daily    = 0.0;
-    data->Rso_daily   = 0.0;
+    memset(data, 0, sizeof(*data));
     data->initialized = true;
 
     return STATUS_OK;
@@ -57,7 +57,7 @@ Status SolarRadiation_Calc(const AngstromValues* ang, SolarRadiationData* out, c
     }
 
     /* Polar night: Ra = 0, N = 0, Rs = 0 */
-    if (day->N_hours  == 0.0) {
+    if (day->N_hours  <= 0.0) {
         out->Rs_daily  = 0.0;
         out->Rso_daily = 0.0;
 
@@ -65,7 +65,7 @@ Status SolarRadiation_Calc(const AngstromValues* ang, SolarRadiationData* out, c
     }
 
     /* Actual sunshine duration n cannot exceed maximum possible N */
-    const double n = (sunshine->n_hours <= day->N_hours) ? sunshine->n_hours : day->N_hours;
+    const double n = Min(sunshine->n_hours, day->N_hours);
 
     /* Relative sunshine duration n/N */
     const double n_over_N = n / day->N_hours;

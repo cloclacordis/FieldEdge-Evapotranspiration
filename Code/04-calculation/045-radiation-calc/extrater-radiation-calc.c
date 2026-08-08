@@ -2,11 +2,11 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "extrater-radiation-calc.h"
+#include "../../03-validation/034-math-utils/math-utils.h"
 
 #define SOLAR_CONSTANT_GSC    (0.0820)    /* Solar constant G_sc [MJ m2 min] *** * * */
-#define PI    (3.14159265358979323846)    /* For portability **** * * * ****** * * * */
 #define RA_COEFFICIENT        (1440.0)    /* (24 * 60) / π * Gsc = 1440 / π * 0.0820 */
 
 /* Ra data initialization */
@@ -15,8 +15,7 @@ Status RaCalc_Init(RaData* data) {
         return STATUS_NULL_POINTER;
     }
 
-    data->Ra_daily     = 0.0;
-    data->initialized  = false;
+    memset(data, 0, sizeof(*data));
 
     return STATUS_OK;
 }

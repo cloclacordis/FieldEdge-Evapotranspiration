@@ -37,6 +37,8 @@ set(FAO56_SOURCES
         03-validation/033-status/status.c
         03-validation/033-status/status.h
 
+        03-validation/034-math-utils/math-utils.h
+
         04-calculation/041-air-temperature-calc/air-temperature-calc.c
         04-calculation/041-air-temperature-calc/air-temperature-calc.h
 
@@ -75,6 +77,9 @@ set(FAO56_SOURCES
 
         04-calculation/047-evapotranspiration-calc/eto-calc.c
         04-calculation/047-evapotranspiration-calc/eto-calc.h
+
+        05-orchestration/daily-cycle.c
+        05-orchestration/daily-cycle.h
 )
 
 ### ## # Target 1: application binary [orchestration] # ## ###
@@ -84,6 +89,7 @@ add_executable(fao56_app
 )
 
 target_link_libraries(fao56_app m)
+target_compile_options(fao56_app PRIVATE -Wall -Wextra -Werror -Wfloat-equal -Wconversion -Wshadow)
 
 ### ## # Target 2: test binary [unity] # ## ###
 include(FetchContent)
@@ -104,6 +110,7 @@ add_executable(fao56_test
 
 target_link_libraries(fao56_test m unity)
 target_compile_definitions(unity PUBLIC UNITY_INCLUDE_DOUBLE)
+target_compile_options(fao56_test PRIVATE -Wall -Wextra -Werror -Wfloat-equal -Wconversion -Wshadow)
 
 # CTest
 enable_testing()

@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "psychrometric-calc.h"
 
 Status AtmosphericData_Init(AtmosphericData *data) {
@@ -10,9 +10,8 @@ Status AtmosphericData_Init(AtmosphericData *data) {
         return STATUS_NULL_POINTER;
     }
 
-    data->P_kPa           = 0.0;
-    data->gamma_kPa_per_C = 0.0;
-    data->initialized     = true;
+    memset(data, 0, sizeof(*data));
+    data->initialized = true;
 
     return STATUS_OK;
 }

@@ -1,19 +1,16 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-#include <stddef.h>
+#include <string.h>
 #include "air-humidity-calc.h"
+#include "../../03-validation/032-validation/validation.h"
 
 Status AirHumidity_Init(AirHumidityData *data) {
     if (data == NULL) {
         return STATUS_NULL_POINTER;
     }
 
-    data->RH_max      = 0.0;
-    data->RH_min      = 0.0;
-    data->RH_mean     = 0.0;
-    data->timestamp   = 0U;
-    data->initialized = false;
+    memset(data, 0, sizeof(*data));
 
     return STATUS_OK;
 }
@@ -23,7 +20,7 @@ Status AirHumidity_Update(AirHumidityData *data, const double RH_pct, const uint
         return STATUS_NULL_POINTER;
     }
 
-    if ((RH_pct < 0.0) || (RH_pct > 100.0)) {
+    if (!ValidHumidityPercent(RH_pct)) {
         return STATUS_INVALID_VALUE;
     }
 

@@ -14,6 +14,9 @@ extern "C" {
 /* Temporary protective corridor for temperature values */
 bool ValidTemperatureC(double value);
 
+/* Relative humidity as measured; true iff isfinite(value) && 0 <= value <= 100 */
+bool ValidHumidityPercent(double value);
+
 /* Range covers the entire Earth; poles are intentionally included *** * ** *** * * *** *** *** */
 bool ValidLatitudeRad(double phi);  /* true iff isfinite(phi) && phi >= -(π/2) && phi <= +(π/2) */
 

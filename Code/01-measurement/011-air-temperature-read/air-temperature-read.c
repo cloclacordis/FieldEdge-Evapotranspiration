@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include "air-temperature-read.h"
 
-#define SENSOR_MOCK_INSTANT_C             (20.0)  // Emulate air temperature measurement
-#define SENSOR_DEFAULT_INSTANT_C          (20.0)  // Use default value
+#define SENSOR_MOCK_INSTANT_C             (20.0)  /* Emulate air temperature measurement */
+#define SENSOR_DEFAULT_INSTANT_C          (20.0)  /* Use default value *** * * **** * ** */
 #define SENSOR_AIR_TEMP_DEFAULT_TIMESTAMP (0U)
 
 Status SensorTemperature_ReadInstant(TemperatureSample* out_sample) {

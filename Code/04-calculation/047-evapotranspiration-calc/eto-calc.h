@@ -10,15 +10,16 @@ extern "C" {
 
 #include "../../03-validation/033-status/status.h"
 
+#define C_RAD  (0.408)    /* Radiation conversion coefficient to ET mm *** ** * ***** * ** */
 /* Daily soil heat flux G ≈ 0 (eq. 42): G_mj_m2_day argument in Calc_ETo() for daily calc  */
-#define ETO_G_DAILY_MJ_M2_DAY  (0.0)    /* MJ m⁻² day⁻¹ **** * * ***** * * * * ******* * ** */
+#define ETO_G_DAILY_MJ_M2_DAY  (0.0)    /* MJ m-2 day-1 **** * * ***** * * * * ****** * ** */
 
 /* Reference evapotranspiration, or Penman-Monteith equation (eq. 6):
  * if ea  > es (RH > 100%): ea is capped to es (VPD = 0);
  * if ETo < 0  (Rn < 0): result = 0 (ETo ≥ 0) * * **** * ** * **** * * * * * **** * * **** */
 Status Calc_ETo(
     double  delta_kpa_c,       /* Slope of saturation vapour pressure curve [kPa/C]; > 0 * */
-    double  Rn_mj_m2_day,      /* Net radiation [MJ m⁻² day⁻¹]; may be < 0 * * **** * * * * */
+    double  Rn_mj_m2_day,      /* Net radiation [MJ m-2 day-1]; may be < 0 * * *** * * * * */
     double  G_mj_m2_day,       /* Daily soil heat flux; ETO_G_DAILY_MJ_M2_DAY * * **** * * */
     double  gamma_kpa_c,       /* Psychrometric constant [kPa/C];   > 0 * * * ** * * *** * */
     double  T_mean_c,          /* Mean daily temperature [C] * * * * **** * **** * * * *** */

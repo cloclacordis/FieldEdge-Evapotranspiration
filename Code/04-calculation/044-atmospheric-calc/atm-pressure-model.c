@@ -20,7 +20,7 @@ Status Calc_PressureFromElevation(const double elevation_m, double *P_kPa) {
         return STATUS_INVALID_VALUE;
     }
 
-    const double P = 101.3 * pow(factor, 5.26);        /* eq. 7 */
+    const double P = 101.3 * pow(factor, 5.26);     /* eq. 7 */
     if (!isfinite(P) || (P <= 0.0)) {
         return STATUS_INVALID_VALUE;
     }

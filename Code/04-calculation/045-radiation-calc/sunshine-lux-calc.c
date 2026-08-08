@@ -8,7 +8,7 @@
  * threshold comparison logic can be modified in one place (e.g., for calibration or adding hysteresis) */
 static bool SunshineLux_IsBright(const SunshineLuxData* data, const double lux) {
     return lux >= data->threshold_lux;
-};
+}
 
 Status SunshineLux_Init(SunshineLuxData* data, const double threshold_lux, const uint32_t sample_period_sec) {
     if (data == NULL) {

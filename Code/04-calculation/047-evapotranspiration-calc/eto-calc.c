@@ -1,19 +1,26 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
+#include <math.h>
 #include <stddef.h>
 #include "eto-calc.h"
+#include "../../03-validation/034-math-utils/math-utils.h"
 
 /* Constants for FAO56 eq. 6 (1998: 24) **** * * * * * * * ********* * *** */
-#define C_RAD   (0.408)    /* Radiation conversion coefficient to ET mm ** */
 #define C_AERO  (900.0)    /* Daily aerodynamic constant * * * * ***** *** */
 #define C_TK    (273.0)    /* C to K conversion (FAO56 uses 273) ** * ** * */
 #define C_WIND  (0.34)     /* Aerodynamic resistance coefficient for grass */
 
-Status Calc_ETo(const double  delta_kpa_c, const double  Rn_mj_m2_day, const double  G_mj_m2_day, const double  gamma_kpa_c,
-    const double  T_mean_c, const double  u2_m_s, const double  es_kpa, const double  ea_kpa, double *out_eto_mm_day) {
+Status Calc_ETo(const double delta_kpa_c, const double Rn_mj_m2_day, const double G_mj_m2_day, const double gamma_kpa_c,
+    const double T_mean_c, const double u2_m_s, const double es_kpa, const double ea_kpa, double *out_eto_mm_day) {
     if (out_eto_mm_day == NULL) {
         return STATUS_NULL_POINTER;
+    }
+
+    /* Reject NaN/Infinity on every input before any arithmetic or sign check */
+    if (!isfinite(delta_kpa_c) || !isfinite(Rn_mj_m2_day) || !isfinite(G_mj_m2_day) || !isfinite(gamma_kpa_c)
+        || !isfinite(T_mean_c) || !isfinite(u2_m_s) || !isfinite(es_kpa) || !isfinite(ea_kpa)) {
+        return STATUS_INVALID_VALUE;
     }
 
     /* Physical constraints: Δ and γ must be positive, u2 non-negative, es positive, ea non-negative */
@@ -22,7 +29,7 @@ Status Calc_ETo(const double  delta_kpa_c, const double  Rn_mj_m2_day, const dou
     }
 
     /* Clamp ea: RH cannot exceed 100% (otherwise it's a measurement error) */
-    double ea_eff = (ea_kpa > es_kpa) ? es_kpa : ea_kpa;
+    const double ea_eff = Min(ea_kpa, es_kpa);
 
     /* Eq. 6 numerator: radiation term + aerodynamic term */
     double num_rad  = C_RAD * delta_kpa_c * (Rn_mj_m2_day - G_mj_m2_day);
@@ -32,8 +39,8 @@ Status Calc_ETo(const double  delta_kpa_c, const double  Rn_mj_m2_day, const dou
     double den = delta_kpa_c + gamma_kpa_c * (1.0 + C_WIND * u2_m_s);
 
     /* Eq. 6 result; clamp to 0 when Rn < 0 (winter, polar night) */
-    double eto = (num_rad + num_aero) / den;
-    *out_eto_mm_day = (eto > 0.0) ? eto : 0.0;
+    const double eto = (num_rad + num_aero) / den;
+    *out_eto_mm_day = Max(eto, 0.0);
 
     return STATUS_OK;
 }
@@ -41,6 +48,10 @@ Status Calc_ETo(const double  delta_kpa_c, const double  Rn_mj_m2_day, const dou
 Status Calc_ETc(const double eto_mm_day, const double kc, double *out_etc_mm_day) {
     if (out_etc_mm_day == NULL) {
         return STATUS_NULL_POINTER;
+    }
+
+    if (!isfinite(eto_mm_day) || !isfinite(kc)) {
+        return STATUS_INVALID_VALUE;
     }
 
     if (eto_mm_day < 0.0 || kc <= 0.0) {

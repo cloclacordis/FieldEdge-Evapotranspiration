@@ -17,17 +17,15 @@
 
 #include "test-config.h"
 
-#include "../01-measurement/011-air-temperature-read/air-temperature-read.h"
-#include "../01-measurement/012-air-humidity-read/air-humidity-read.h"
 #include "../01-measurement/014-sunshine-lux-read/sunshine-lux-read.h"
-#include "../01-measurement/015-wind-speed-read/wind-speed-read.h"
 
 #include "../02-providers/021-date-provider/date-provider.h"
 #include "../02-providers/022-configurations/deployment-config.h"
 
-#include "../03-validation/033-status/status.h"
-#include "../03-validation/032-validation/validation.h"
 #include "../03-validation/031-value-source/value-source.h"
+#include "../03-validation/032-validation/validation.h"
+#include "../03-validation/033-status/status.h"
+#include "../03-validation/034-math-utils/math-utils.h"
 
 #include "../04-calculation/041-air-temperature-calc/air-temperature-calc.h"
 #include "../04-calculation/042-air-humidity-calc/air-humidity-calc.h"
@@ -47,8 +45,6 @@
 
 #include "../04-calculation/047-evapotranspiration-calc/eto-calc.h"
 
-#define PI (3.14159265358979323846)
-
 /* *** Helper functions *** */
 
 /* Pause in milliseconds (for real-time emulation) */
@@ -67,10 +63,10 @@ static void AssertDouble(const char *label, const double actual,
     double abs_diff = fabs(actual - expected);
 
     snprintf(msg, sizeof(msg),
-             "%s: actual=%.6f  expected=%.6f  diff=%.6f  tol=%.6f",
+             "%s: actual = %.6f  expected = %.6f  diff = %.6f  tol = %.6f",
              label, actual, expected, abs_diff, tol);
              
-    (void)printf("  %-36s actual=%.4f  expected=%.4f\n", label, actual, expected);
+    (void)printf("  %-36s actual = %.4f  expected = %.4f\n", label, actual, expected);
     TEST_ASSERT_DOUBLE_WITHIN_MESSAGE(tol, expected, actual, msg);    /* Unity macro */
 }
 
@@ -83,7 +79,7 @@ static void AssertStatus(const char *label, const Status actual,
              label, Status_ToString(actual), Status_ToString(expected));
              
     (void)printf("  %-36s %s\n", label, Status_ToString(actual));
-    TEST_ASSERT_EQUAL_INT_MESSAGE((int)expected, (int)actual, msg);    /* Unity macro */
+    TEST_ASSERT_EQUAL_INT_MESSAGE((int)expected, (int)actual, msg);   /* Unity macro */
 }
 
 void setUp(void)    { /* nothing */ }    /* Called before each test */
@@ -175,11 +171,11 @@ static void test_AirTemperature_MinMaxTracking(void) {
 static void test_ValidDayOfYear_BoundaryValues(void) {
     (void)printf("\n>>> TC6: %s\n", __func__);
 
-    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(1U),     "J=1 valid");
-    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(366U),   "J=366 valid");
-    TEST_ASSERT_FALSE_MESSAGE(ValidDayOfYear(0U),    "J=0 invalid");
-    TEST_ASSERT_FALSE_MESSAGE(ValidDayOfYear(367U),  "J=367 invalid");
-    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(246U),   "J=246 valid");
+    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(1U),     "J = 1 valid");
+    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(366U),   "J = 366 valid");
+    TEST_ASSERT_FALSE_MESSAGE(ValidDayOfYear(0U),    "J = 0 invalid");
+    TEST_ASSERT_FALSE_MESSAGE(ValidDayOfYear(367U),  "J = 367 invalid");
+    TEST_ASSERT_TRUE_MESSAGE(ValidDayOfYear(246U),   "J = 246 valid");
 }
 
 /* TC7: ValidLatitudeRad, boundary values [-π/2, +π/2] */
@@ -188,12 +184,12 @@ static void test_ValidLatitudeRad_BoundaryValues(void) {
 
     const double PI_2 = PI / 2.0;
 
-    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(0.0),     "lat=0 valid");
-    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(PI_2),    "lat=+π/2 valid");
-    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(-PI_2),   "lat=-π/2 valid");
-    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(2.0),    "lat=2.0 > π/2 invalid");
-    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(-2.0),   "lat=-2.0 < -π/2 invalid");
-    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(1.5708), "lat=1.5708 > π/2 invalid"); /* 1.5708 > π/2 ≈ 1.57079632... boundary case */
+    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(0.0),     "lat = 0 valid");
+    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(PI_2),    "lat = +π/2 valid");
+    TEST_ASSERT_TRUE_MESSAGE(ValidLatitudeRad(-PI_2),   "lat = -π/2 valid");
+    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(2.0),    "lat = 2.0 > π/2 invalid");
+    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(-2.0),   "lat = -2.0 < -π/2 invalid");
+    TEST_ASSERT_FALSE_MESSAGE(ValidLatitudeRad(1.5708), "lat = 1.5708 > π/2 invalid"); /* 1.5708 > π/2 ≈ 1.57079632... boundary case */
 }
 
 /* TC8: DayCalc_JFromDate, calendar dates & leap years */
@@ -232,9 +228,9 @@ static void test_DayCalc_Update_InvalidJ(void) {
     LocationData loc; Location_Init(&loc);
     DayData dd;       DayCalc_Init(&dd);
 
-    AssertStatus("DayCalc_Update(J=0)",
+    AssertStatus("DayCalc_Update(J = 0)",
                  DayCalc_Update(&dd, 0U, &loc),   STATUS_INVALID_VALUE);
-    AssertStatus("DayCalc_Update(J=367)",
+    AssertStatus("DayCalc_Update(J = 367)",
                  DayCalc_Update(&dd, 367U, &loc),  STATUS_INVALID_VALUE);
 }
 
@@ -247,17 +243,17 @@ static void test_DayCalc_Update_InvalidLatitude(void) {
     DayData dd;       DayCalc_Init(&dd);
 
     loc.latitude_rad = 2.0;
-    AssertStatus("DayCalc_Update(lat=+2.0 rad)",
+    AssertStatus("DayCalc_Update(lat = +2.0 rad)",
                  DayCalc_Update(&dd, 246U, &loc), STATUS_INVALID_VALUE);
 
     loc.latitude_rad = -2.0;
-    AssertStatus("DayCalc_Update(lat=-2.0 rad)",
+    AssertStatus("DayCalc_Update(lat = -2.0 rad)",
                  DayCalc_Update(&dd, 246U, &loc), STATUS_INVALID_VALUE);
 }
 
 /* *** TC12-13: Location_DMS_to_decimal, FAO56 ex.7 *** */
 
-/* TC12: Bangkok 1344'N */
+/* TC12: Bangkok 13°44'N */
 static void test_Location_DMS_Bangkok(void) {
     (void)printf("\n>>> TC12: %s\n", __func__);
 
@@ -267,12 +263,12 @@ static void test_Location_DMS_Bangkok(void) {
                  Location_DMS_to_decimal(TEST_BANGKOK_LAT_DEG, TEST_BANGKOK_LAT_MIN,
                                          &loc.latitude_deg), STATUS_OK);
 
-    loc.latitude_rad = loc.latitude_deg * (PI / 180.0);
+    loc.latitude_rad = loc.latitude_deg * DEG_TO_RAD;
     AssertDouble("latitude_deg", loc.latitude_deg, TEST_BANGKOK_LAT_EXPECTED, TOL_DEGREE);
     AssertDouble("latitude_rad", loc.latitude_rad, TEST_BANGKOK_RAD_EXPECTED, TOL_RADIANS);
 }
 
-/* TC13: Rio de Janeiro 2254'S */
+/* TC13: Rio de Janeiro 22°54'S */
 static void test_Location_DMS_Rio(void) {
     (void)printf("\n>>> TC13: %s\n", __func__);
 
@@ -282,7 +278,7 @@ static void test_Location_DMS_Rio(void) {
                  Location_DMS_to_decimal(TEST_RIO_LAT_DEG, TEST_RIO_LAT_MIN,
                                          &loc.latitude_deg), STATUS_OK);
 
-    loc.latitude_rad = loc.latitude_deg * (PI / 180.0);
+    loc.latitude_rad = loc.latitude_deg * DEG_TO_RAD;
     AssertDouble("latitude_deg", loc.latitude_deg, TEST_RIO_LAT_EXPECTED, TOL_DEGREE);
     AssertDouble("latitude_rad", loc.latitude_rad, TEST_RIO_RAD_EXPECTED, TOL_RADIANS);
 }
@@ -308,14 +304,14 @@ static void test_Calc_Ra_FAO56_ex8(void) {
     AssertDouble("Ra [MJ m-2 day-1]", rd.Ra_daily, TEST_EX8_RA_EXPECTED, TOL_RA);
 }
 
-/* TC15: polar night, 80N, J = 355 -> ωs = 0, N = 0, Ra = 0 */
+/* TC15: polar night, 80°N, J = 355 -> ωs = 0, N = 0, Ra = 0 */
 static void test_Calc_Ra_PolarNight(void) {
     (void)printf("\n>>> TC15: %s\n", __func__);
 
     LocationData loc;
 
     loc.latitude_deg = TEST_POLAR_LAT_DEG;
-    loc.latitude_rad = TEST_POLAR_LAT_DEG * (PI / 180.0);
+    loc.latitude_rad = TEST_POLAR_LAT_DEG * DEG_TO_RAD;
     loc.elevation_m  = 0.0;
     loc.initialized  = true;
 
@@ -323,11 +319,11 @@ static void test_Calc_Ra_PolarNight(void) {
     RaData  rd; RaCalc_Init(&rd);
 
     AssertStatus("DayCalc_Update",    DayCalc_Update(&dd, TEST_POLAR_J, &loc), STATUS_OK);
-    AssertDouble("omega_s [rad]",     dd.omega_s_rad, TEST_POLAR_OMEGA_S_EXPECTED,  1e-9);
-    AssertDouble("N [h]",             dd.N_hours,     TEST_POLAR_N_EXPECTED,  1e-9);
+    AssertDouble("omega_s [rad]",     dd.omega_s_rad, TEST_POLAR_OMEGA_S_EXPECTED,  TEST_EPSILON_THRESHOLD);
+    AssertDouble("N [h]",             dd.N_hours,     TEST_POLAR_N_EXPECTED,  TEST_EPSILON_THRESHOLD);
 
     AssertStatus("Calc_Ra", Calc_Ra(&rd, &dd, &loc), STATUS_OK);
-    AssertDouble("Ra [MJ m-2 day-1]", rd.Ra_daily,   TEST_POLAR_RA_EXPECTED, 1e-9);
+    AssertDouble("Ra [MJ m-2 day-1]", rd.Ra_daily,   TEST_POLAR_RA_EXPECTED, TEST_EPSILON_THRESHOLD);
 }
 
 /* TC16: STATUS_INVALID_VALUE, DayData not initialized (initialized = false) */
@@ -341,7 +337,8 @@ static void test_Calc_Ra_UninitializedDayData(void) {
     AssertStatus("Calc_Ra(uninitialized DayData)",
                  Calc_Ra(&rd, &dd, &loc), STATUS_INVALID_VALUE);
                  
-    AssertDouble("Ra_daily remains 0.0", rd.Ra_daily, 0.0, 1e-9);    /* Ra_daily must not have changed */
+    AssertDouble("Ra_daily remains 0.0",
+                 rd.Ra_daily, 0.0, TEST_EPSILON_THRESHOLD);    /* Ra_daily must not have changed */
 }
 
 /* *** TC17-19: sunshine accumulator module SunshineLux *** */
@@ -353,10 +350,11 @@ static void test_SunshineLux_FullSunshine(void) {
 
     SunshineLuxData sd;
 
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
     AssertStatus("SunshineLux_ResetDay", SunshineLux_ResetDay(&sd), STATUS_OK);
 
-    for (uint32_t i = 0U; i < 60U; ++i) {
+    for (uint32_t i = 0U; i < TEST_SAMPLE_PERIOD_SEC; ++i) {
         Status s = SunshineLux_Update(&sd, 50000.0, SENSOR_VALUE_MEASURED);
 
         if (s != STATUS_OK) {
@@ -368,13 +366,13 @@ static void test_SunshineLux_FullSunshine(void) {
     }
 
     (void)printf("  SunshineLux_Update * 60         all STATUS_OK"
-                 "  (lux=50000 > threshold=20000)\n");
+                 "  (lux = 50000 > threshold = 20000)\n");
 
-    (void)printf("  bright_samples=%-4u  total_samples=%u\n",
+    (void)printf("  bright_samples = %-4u  total_samples = %u\n",
                  (unsigned)sd.bright_samples, (unsigned)sd.total_samples);
 
     AssertStatus("SunshineLux_FinalizeDay", SunshineLux_FinalizeDay(&sd), STATUS_OK);
-    AssertDouble("n_hours", sd.n_hours, 1.0, 0.001);
+    AssertDouble("n_hours", sd.n_hours, 1.0, TEST_TOLERANCE_VALUE);
 }
 
 /* TC18: no sunshine, 60 dark samples -> n = 0;
@@ -384,10 +382,11 @@ static void test_SunshineLux_NoSunshine(void) {
 
     SunshineLuxData sd;
 
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
     AssertStatus("SunshineLux_ResetDay", SunshineLux_ResetDay(&sd), STATUS_OK);
 
-    for (uint32_t i = 0U; i < 60U; ++i) {
+    for (uint32_t i = 0U; i < TEST_SAMPLE_PERIOD_SEC; ++i) {
         Status s = SunshineLux_Update(&sd, 1000.0, SENSOR_VALUE_MEASURED);
 
         if (s != STATUS_OK) {
@@ -399,13 +398,13 @@ static void test_SunshineLux_NoSunshine(void) {
     }
 
     (void)printf("  SunshineLux_Update * 60        all STATUS_OK"
-                 "  (lux=1000 < threshold=20000)\n");
+                 "  (lux = 1000 < threshold = 20000)\n");
 
-    (void)printf("  bright_samples=%-4u  total_samples=%u\n",
+    (void)printf("  bright_samples = %-4u  total_samples = %u\n",
                  (unsigned)sd.bright_samples, (unsigned)sd.total_samples);
 
     AssertStatus("SunshineLux_FinalizeDay", SunshineLux_FinalizeDay(&sd), STATUS_OK);
-    AssertDouble("n_hours", sd.n_hours, 0.0, 1e-9);
+    AssertDouble("n_hours", sd.n_hours, 0.0, TEST_EPSILON_THRESHOLD);
 }
 
 /* TC19: mixed day, 30 bright + 30 dark -> n = 0.5 h */
@@ -414,7 +413,8 @@ static void test_SunshineLux_MixedDay(void) {
 
     SunshineLuxData sd;
 
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
     AssertStatus("SunshineLux_ResetDay", SunshineLux_ResetDay(&sd), STATUS_OK);
 
     for (uint32_t i = 0U; i < 30U; ++i) {
@@ -428,7 +428,7 @@ static void test_SunshineLux_MixedDay(void) {
     }
 
     AssertStatus("SunshineLux_FinalizeDay", SunshineLux_FinalizeDay(&sd), STATUS_OK);
-    AssertDouble("n_hours", sd.n_hours, 0.5, 0.001);
+    AssertDouble("n_hours", sd.n_hours, 0.5, TEST_TOLERANCE_VALUE);
 }
 
 /* *** TC20-24: solar radiation Rs, Rso *** */
@@ -444,7 +444,7 @@ static void test_SolarRadiation_FAO56_ex10(void) {
                  Location_DMS_to_decimal(TEST_RIO_LAT_DEG, TEST_RIO_LAT_MIN,
                                          &loc.latitude_deg), STATUS_OK);
 
-    loc.latitude_rad = loc.latitude_deg * (PI / 180.0);
+    loc.latitude_rad = loc.latitude_deg * DEG_TO_RAD;
     loc.elevation_m  = TEST_ELEVATION_SEA_LEVEL;
     loc.initialized  = true;
 
@@ -481,7 +481,7 @@ static void test_SolarRadiation_PolarNight(void) {
     LocationData loc;
 
     loc.latitude_deg = TEST_POLAR_LAT_DEG;
-    loc.latitude_rad = TEST_POLAR_LAT_DEG * (PI / 180.0);
+    loc.latitude_rad = TEST_POLAR_LAT_DEG * DEG_TO_RAD;
     loc.elevation_m  = 0.0;
     loc.initialized  = true;
 
@@ -494,7 +494,8 @@ static void test_SolarRadiation_PolarNight(void) {
     AssertStatus("Calc_Ra", Calc_Ra(&rd, &dd, &loc), STATUS_OK);
 
     SunshineLuxData sd;
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
 
     sd.n_hours     = 0.0;
     sd.initialized = true;
@@ -502,8 +503,8 @@ static void test_SolarRadiation_PolarNight(void) {
     AssertStatus("SolarRadiation_Calc",
                  SolarRadiation_Calc(&ang, &rsd, &rd, &dd, &sd, &loc), STATUS_OK);
                  
-    AssertDouble("Rs",  rsd.Rs_daily,  0.0, 1e-9);
-    AssertDouble("Rso", rsd.Rso_daily, 0.0, 1e-9);
+    AssertDouble("Rs",  rsd.Rs_daily,  0.0, TEST_EPSILON_THRESHOLD);
+    AssertDouble("Rso", rsd.Rso_daily, 0.0, TEST_EPSILON_THRESHOLD);
 }
 
 /* TC22: limit n > N; result: Rs = (as + bs * 1.0) * Ra = 0.75 * Ra */
@@ -520,7 +521,8 @@ static void test_SolarRadiation_NClampedToN(void) {
     AssertStatus("Calc_Ra", Calc_Ra(&rd, &dd, &loc), STATUS_OK);
 
     SunshineLuxData sd;
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
 
     sd.n_hours     = dd.N_hours + 5.0;  /* intentionally > N */
     sd.initialized = true;
@@ -547,7 +549,8 @@ static void test_SolarRadiation_InvalidAngstrom(void) {
     AssertStatus("Calc_Ra", Calc_Ra(&rd, &dd, &loc), STATUS_OK);
 
     SunshineLuxData sd;
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
 
     sd.n_hours     = 5.0;
     sd.initialized = true;
@@ -568,7 +571,8 @@ static void test_SolarRadiation_UninitializedData(void) {
     AngstromValues     ang; AngstromValues_Default(&ang);
 
     SunshineLuxData sd;
-    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd, 20000.0, 60U), STATUS_OK);
+    AssertStatus("SunshineLux_Init", SunshineLux_Init(&sd,
+            TEST_BRIGHT_LUX_THRESHOLD, TEST_SAMPLE_PERIOD_SEC), STATUS_OK);
 
     sd.n_hours     = 5.0;
     sd.initialized = true;
@@ -589,17 +593,17 @@ static void test_DateProvider_BasicPC(void) {
 
     char msg[64];
 
-    snprintf(msg, sizeof(msg), "year=%u not in [2024, 2099]", date.year);
+    snprintf(msg, sizeof(msg), "year = %u not in [2024, 2099]", date.year);
     TEST_ASSERT_TRUE_MESSAGE((date.year >= 2024U) && (date.year <= 2099U), msg);
 
-    snprintf(msg, sizeof(msg), "month=%u not in [1, 12]", (unsigned)date.month);
+    snprintf(msg, sizeof(msg), "month = %u not in [1, 12]", (unsigned)date.month);
     TEST_ASSERT_TRUE_MESSAGE((date.month >= 1U) && (date.month <= 12U), msg);
 
-    snprintf(msg, sizeof(msg), "day=%u not in [1, 31]", (unsigned)date.day);
+    snprintf(msg, sizeof(msg), "day = %u not in [1, 31]", (unsigned)date.day);
     TEST_ASSERT_TRUE_MESSAGE((date.day >= 1U) && (date.day <= 31U), msg);
 
     uint16_t j = DayCalc_JFromDate(date.day, date.month, date.year);
-    snprintf(msg, sizeof(msg), "J=%u not in [1, 366]", j);
+    snprintf(msg, sizeof(msg), "J = %u not in [1, 366]", j);
     TEST_ASSERT_TRUE_MESSAGE((j >= 1U) && (j <= 366U), msg);
 
     (void)printf("  Current date: %04u-%02u-%02u  J=%u\n",
@@ -657,7 +661,7 @@ static void test_SunshineLux_RealTimeEmulation(void) {
         AssertStatus("SunshineLux_Update",
                      SunshineLux_Update(&sd, lux_sample.lux, lux_sample.source), STATUS_OK);
                      
-        (void)printf("  [%u] lux=%.0f  bright=%u  ts=%u\n",
+        (void)printf("  [%u] lux = %.0f  bright = %u  ts = %u\n",
                      (unsigned)i, lux_sample.lux, sd.bright_samples, timestamps[i]);
                      
         SleepMs(TEST_EMUL_DELAY_MS);
@@ -669,14 +673,14 @@ static void test_SunshineLux_RealTimeEmulation(void) {
     AssertStatus("SunshineLux_FinalizeDay", SunshineLux_FinalizeDay(&sd), STATUS_OK);
 
     /* (b) n_hours does not depend on real time (pure calc) */
-    AssertDouble("n_hours", sd.n_hours, emul_n_expected, 0.001);
+    AssertDouble("n_hours", sd.n_hours, emul_n_expected, TEST_TOLERANCE_VALUE);
 
     /* (c) timestamps are monotonically non-decreasing */
     for (uint32_t i = 1U; i < TEST_EMUL_SAMPLES; ++i) {
         char msg[128];
 
         snprintf(msg, sizeof(msg),
-                 "ts[%u]=%u < ts[%u]=%u - timestamps not monotonic",
+                 "ts[%u] = %u < ts[%u] = %u - timestamps not monotonic",
                  (unsigned)i,        timestamps[i],
                  (unsigned)(i - 1U), timestamps[i - 1U]);
 
@@ -746,13 +750,13 @@ static void test_Calc_NetRadiation_NullPointer(void) {
     SolarRadiationData solar; SolarRadiation_Init(&solar);
     NetRadiationData   net;   NetRadiation_Init(&net);
 
-    AssertStatus("Calc_NetRadiation(out=NULL)",
+    AssertStatus("Calc_NetRadiation(out = NULL)",
                  Calc_NetRadiation(NULL,  &temp,  &solar, 2.0), STATUS_NULL_POINTER);
 
-    AssertStatus("Calc_NetRadiation(temp=NULL)",
+    AssertStatus("Calc_NetRadiation(temp = NULL)",
                  Calc_NetRadiation(&net,  NULL,   &solar, 2.0), STATUS_NULL_POINTER);
 
-    AssertStatus("Calc_NetRadiation(solar=NULL)",
+    AssertStatus("Calc_NetRadiation(solar = NULL)",
                  Calc_NetRadiation(&net,  &temp,  NULL,   2.0), STATUS_NULL_POINTER);
 }
 
@@ -793,11 +797,11 @@ static void test_Calc_NetRadiation_InvalidEa(void) {
 
     NetRadiationData   net; NetRadiation_Init(&net);
 
-    AssertStatus("Calc_NetRadiation(ea=-0.5)",
+    AssertStatus("Calc_NetRadiation(ea = -0.5)",
                  Calc_NetRadiation(&net, &temp, &solar, -0.5), STATUS_INVALID_VALUE);
 }
 
-/* *** TC33-TC40: air humidity, atmospheric pressure, psychrometry, vapour pressure *** */
+/* *** TC33-TC43: air humidity, atmospheric pressure, psychrometry, vapour pressure *** */
 
 /* TC33: AirHumidity_Update, min/max/mean accumulation;
  * two inputs: 82% (morning) & 54% (day) -> RHmax = 82, RHmin = 54, RHmean = 68 */
@@ -810,20 +814,53 @@ static void test_AirHumidity_Update_MinMaxTracking(void) {
     AssertStatus("AirHumidity_Update(82%)",
                  AirHumidity_Update(&data, TEST_EX5_RH_MAX, 0U), STATUS_OK);
                  
-    AssertDouble("RH_max after 1st", data.RH_max, TEST_EX5_RH_MAX, 0.001);
-    AssertDouble("RH_min after 1st", data.RH_min, TEST_EX5_RH_MAX, 0.001);
+    AssertDouble("RH_max after 1st", data.RH_max, TEST_EX5_RH_MAX, TEST_TOLERANCE_VALUE);
+    AssertDouble("RH_min after 1st", data.RH_min, TEST_EX5_RH_MAX, TEST_TOLERANCE_VALUE);
 
     AssertStatus("AirHumidity_Update(54%)",
                  AirHumidity_Update(&data, TEST_EX5_RH_MIN, 1U), STATUS_OK);
                  
-    AssertDouble("RH_max",  data.RH_max,  TEST_EX5_RH_MAX,        0.001);
-    AssertDouble("RH_min",  data.RH_min,  TEST_EX5_RH_MIN,        0.001);
-    AssertDouble("RH_mean", data.RH_mean, TEST_RH_MEAN_EXPECTED,  0.001);
+    AssertDouble("RH_max",  data.RH_max,  TEST_EX5_RH_MAX,        TEST_TOLERANCE_VALUE);
+    AssertDouble("RH_min",  data.RH_min,  TEST_EX5_RH_MIN,        TEST_TOLERANCE_VALUE);
+    AssertDouble("RH_mean", data.RH_mean, TEST_RH_MEAN_EXPECTED,  TEST_TOLERANCE_VALUE);
 }
 
-/* TC34: Calc_PressureFromElevation, sea level: P = 101.3 kPa */
-static void test_Calc_PressureFromElevation_SeaLevel(void) {
+/* TC34: AirHumidity_Update, NaN */
+static void test_AirHumidity_NaN(void) {
     (void)printf("\n>>> TC34: %s\n", __func__);
+
+    AirHumidityData data;
+    AirHumidity_Init(&data);
+
+    AssertStatus("AirHumidity_Update(NaN)",
+                 AirHumidity_Update(&data, NAN, 0U), STATUS_INVALID_VALUE);
+}
+
+/* TC35: AirHumidity_Update, Infinity */
+static void test_AirHumidity_Infinity(void) {
+    (void)printf("\n>>> TC35: %s\n", __func__);
+
+    AirHumidityData data;
+    AirHumidity_Init(&data);
+
+    AssertStatus("AirHumidity_Update(INF)",
+                 AirHumidity_Update(&data, INFINITY, 0U), STATUS_INVALID_VALUE);
+}
+
+/* TC36: AirHumidity_Update, RH = 150%, out of range [0, 100] */
+static void test_AirHumidity_OutOfRange(void) {
+    (void)printf("\n>>> TC36: %s\n", __func__);
+
+    AirHumidityData data;
+    AirHumidity_Init(&data);
+
+    AssertStatus("AirHumidity_Update(150%)",
+                 AirHumidity_Update(&data, TEST_RH_OUT_OF_RANGE, 0U), STATUS_INVALID_VALUE);
+}
+
+/* TC37: Calc_PressureFromElevation, sea level: P = 101.3 kPa */
+static void test_Calc_PressureFromElevation_SeaLevel(void) {
+    (void)printf("\n>>> TC37: %s\n", __func__);
 
     double P = 0.0;
     AssertStatus("Calc_PressureFromElevation(z = 0)",
@@ -832,9 +869,9 @@ static void test_Calc_PressureFromElevation_SeaLevel(void) {
     AssertDouble("P [kPa]", P, TEST_P_SEA_LEVEL_EXPECTED, TOL_P);
 }
 
-/* TC35: Calc_PressureFromElevation, FAO56 ex. 2: z = 1800m -> P = 81.8 kPa */
+/* TC38: Calc_PressureFromElevation, FAO56 ex. 2: z = 1800 m -> P = 81.8 kPa */
 static void test_Calc_PressureFromElevation_FAO56_ex2(void) {
-    (void)printf("\n>>> TC35: %s\n", __func__);
+    (void)printf("\n>>> TC38: %s\n", __func__);
 
     double P = 0.0;
     AssertStatus("Calc_PressureFromElevation(z = 1800)",
@@ -843,9 +880,9 @@ static void test_Calc_PressureFromElevation_FAO56_ex2(void) {
     AssertDouble("P [kPa]", P, TEST_EX2_P_EXPECTED, TOL_P);
 }
 
-/* TC36: Calc_AtmosphericParameters, sea level: P = 101.3 -> γ ≈ 0.0674 */
+/* TC39: Calc_AtmosphericParameters, sea level: P = 101.3 -> γ ≈ 0.0674 */
 static void test_Calc_AtmosphericParameters_SeaLevel(void) {
-    (void)printf("\n>>> TC36: %s\n", __func__);
+    (void)printf("\n>>> TC39: %s\n", __func__);
 
     AtmosphericData atmos;
     AtmosphericData_Init(&atmos);
@@ -857,9 +894,9 @@ static void test_Calc_AtmosphericParameters_SeaLevel(void) {
     AssertDouble("gamma [kPa/C]",  atmos.gamma_kPa_per_C, TEST_GAMMA_SEA_LEVEL_EXPECTED, TOL_GAMMA);
 }
 
-/* TC37: Calc_AtmosphericParameters - FAO56 ex. 2: P = 81.8 -> γ = 0.054 */
+/* TC40: Calc_AtmosphericParameters - FAO56 ex. 2: P = 81.8 -> γ = 0.054 */
 static void test_Calc_AtmosphericParameters_FAO56_ex2(void) {
-    (void)printf("\n>>> TC37: %s\n", __func__);
+    (void)printf("\n>>> TC40: %s\n", __func__);
 
     AtmosphericData atmos;
     AtmosphericData_Init(&atmos);
@@ -871,9 +908,9 @@ static void test_Calc_AtmosphericParameters_FAO56_ex2(void) {
     AssertDouble("gamma [kPa/C]",  atmos.gamma_kPa_per_C, TEST_EX2_GAMMA_EXPECTED, TOL_GAMMA);
 }
 
-/* TC38: NULL pointer, Calc_PressureFromElevation & Calc_AtmosphericParameters */
+/* TC41: NULL pointer, Calc_PressureFromElevation & Calc_AtmosphericParameters */
 static void test_Calc_AtmosphericParameters_NullPointer(void) {
-    (void)printf("\n>>> TC38: %s\n", __func__);
+    (void)printf("\n>>> TC41: %s\n", __func__);
 
     AssertStatus("Calc_PressureFromElevation(NULL)",
                  Calc_PressureFromElevation(0.0, NULL),         STATUS_NULL_POINTER);
@@ -881,9 +918,9 @@ static void test_Calc_AtmosphericParameters_NullPointer(void) {
                  Calc_AtmosphericParameters(NULL, 101.3), STATUS_NULL_POINTER);
 }
 
-/* TC39: Calc_SaturationVapourPressure, FAO56 ex. 3 - e(24.5C) = 3.075 kPa, e(15.0C) = 1.705 kPa */
+/* TC42: Calc_SaturationVapourPressure, FAO56 ex. 3 - e(24.5C) = 3.075 kPa, e(15.0C) = 1.705 kPa */
 static void test_Calc_SaturationVapourPressure_FAO56_ex3(void) {
-    (void)printf("\n>>> TC39: %s\n", __func__);
+    (void)printf("\n>>> TC42: %s\n", __func__);
 
     double e_max = 0.0;
     double e_min = 0.0;
@@ -897,9 +934,9 @@ static void test_Calc_SaturationVapourPressure_FAO56_ex3(void) {
     AssertDouble("e(Tmin) [kPa]", e_min, TEST_EX3_E_TMIN_EXPECTED, TOL_E_SAT);
 }
 
-/* TC40: Calc_ActualVapourPressure, FAO56 ex. 5 - Tmin = 18C, Tmax = 25C, RHmax = 82%, RHmin = 54% -> ea = 1.70 kPa */
+/* TC43: Calc_ActualVapourPressure, FAO56 ex. 5 - Tmin = 18C, Tmax = 25C, RHmax = 82%, RHmin = 54% -> ea = 1.70 kPa */
 static void test_Calc_ActualVapourPressure_FAO56_ex5(void) {
-    (void)printf("\n>>> TC40: %s\n", __func__);
+    (void)printf("\n>>> TC43: %s\n", __func__);
 
     /* Temperature: two readings set Tmax & Tmin */
     AirTemperatureData temp;
@@ -925,13 +962,13 @@ static void test_Calc_ActualVapourPressure_FAO56_ex5(void) {
     AssertDouble("ea [kPa]", ea, TEST_EX5_EA_EXPECTED, TOL_EA);
 }
 
-/* *** TC41-TC46: Wind speed (eq. 47) *** */
+/* *** TC44-TC49: Wind speed (eq. 47) *** */
 
-/* TC41: Calc_WindSpeedAt2m - normal path.
+/* TC44: Calc_WindSpeedAt2m - normal path.
  * FAO56 ann.2, tab.2.9 / eq.47 / ex. 14: uz = 3.2 m/s at z = 10 m -> u2 = 2.393 m/s.
  * Conversion factor: 4.87 / ln(672.58) = 4.87 / 6.511 ≈ 0.748 (matches tab.2.9). */
 static void test_Calc_WindSpeedAt2m_FAO56(void) {
-    (void)printf("\n>>> TC41: %s\n", __func__);
+    (void)printf("\n>>> TC44: %s\n", __func__);
 
     double u2 = 0.0;
 
@@ -940,11 +977,11 @@ static void test_Calc_WindSpeedAt2m_FAO56(void) {
     AssertDouble("u2 [m/s]", u2, TEST_WIND_U2_EXPECTED, TOL_WIND_MS);
 }
 
-/* TC42: Calc_WindSpeedAt2m, at z = 2 m conversion factor ≈ 1.0;
+/* TC45: Calc_WindSpeedAt2m, at z = 2 m conversion factor ≈ 1.0;
  * numerator & denominator of eq. 47 match: ln(130.18) ≈ 4.869 ≈ 4.87;
  * if anemometer at 2 m (FAO standard), conversion does not change the value */
 static void test_Calc_WindSpeedAt2m_At2m(void) {
-    (void)printf("\n>>> TC42: %s\n", __func__);
+    (void)printf("\n>>> TC45: %s\n", __func__);
 
     double u2 = 0.0;
 
@@ -953,11 +990,11 @@ static void test_Calc_WindSpeedAt2m_At2m(void) {
     AssertDouble("u2 ≈ uz at z = 2 m", u2, TEST_WIND_AT2M_EXPECTED, TOL_WIND_MS);
 }
 
-/* TC43: WindSpeed_Init + WindSpeed_Update * 3 -> min/max/mean accumulation; then eq. 47;
+/* TC46: WindSpeed_Init + WindSpeed_Update * 3 -> min/max/mean accumulation; then eq. 47;
  * samples: 2.0, 4.0, 3.0 m/s at z = 10 m;
  * expected: min = 2.0, max = 4.0, mean = 3.0; u2 = 3.0 * 0.748 = 2.244 m/s */
 static void test_WindSpeed_Update_Accumulation(void) {
-    (void)printf("\n>>> TC43: %s\n", __func__);
+    (void)printf("\n>>> TC46: %s\n", __func__);
 
     WindSpeedData data;
 
@@ -990,9 +1027,9 @@ static void test_WindSpeed_Update_Accumulation(void) {
     AssertDouble("u2 [m/s]", u2, TEST_WIND_MEAN_U2_EXPECTED, TOL_WIND_MS);
 }
 
-/* TC44: NULL pointer, all three functions of the module */
+/* TC47: NULL pointer, all three functions of the module */
 static void test_WindSpeed_NullPointer(void) {
-    (void)printf("\n>>> TC44: %s\n", __func__);
+    (void)printf("\n>>> TC47: %s\n", __func__);
 
     double u2 = 0.0;
 
@@ -1003,14 +1040,14 @@ static void test_WindSpeed_NullPointer(void) {
                  Calc_WindSpeedAt2m(3.2, 10.0, NULL), STATUS_NULL_POINTER);
 
     /* u2 must not change (Calc would return error before writing) */
-    AssertDouble("u2 unchanged", u2, 0.0, 1e-9);
+    AssertDouble("u2 unchanged", u2, 0.0, TEST_EPSILON_THRESHOLD);
 }
 
-/* TC45: STATUS_INVALID_VALUE, all invalid input paths;
+/* TC48: STATUS_INVALID_VALUE, all invalid input paths;
  * speed: negative, NaN, INFINITY;
  * height: below 0.1 m (eq. 47 "degenerates") & above 200 m */
 static void test_Calc_WindSpeedAt2m_InvalidValues(void) {
-    (void)printf("\n>>> TC45: %s\n", __func__);
+    (void)printf("\n>>> TC48: %s\n", __func__);
 
     double u2 = 0.0;
 
@@ -1028,10 +1065,10 @@ static void test_Calc_WindSpeedAt2m_InvalidValues(void) {
                  STATUS_INVALID_VALUE);
 }
 
-/* TC46: WindSpeed_Update - height mismatch on repeated call; physically anemometer height is constant;
+/* TC49: WindSpeed_Update - height mismatch on repeated call; physically anemometer height is constant;
  * changing height signals a configuration error; after a rejected Update, data must remain untouched */
 static void test_WindSpeed_Update_HeightMismatch(void) {
-    (void)printf("\n>>> TC46: %s\n", __func__);
+    (void)printf("\n>>> TC49: %s\n", __func__);
 
     WindSpeedData data;
 
@@ -1054,16 +1091,16 @@ static void test_WindSpeed_Update_HeightMismatch(void) {
                                      "sample_count must not have increased after error");
 }
 
-/* *** TC47-TC53: evapotranspiration (eq. 6, eq. 56) *** */
+/* *** TC50-TC58: evapotranspiration (eq. 6, eq. 56) *** */
 
-/* TC47: Calc_ETo, normal path (G = 0, u2 = 2.0); composite scenario from FAO56 examples;
+/* TC50: Calc_ETo, normal path (G = 0, u2 = 2.0); composite scenario from FAO56 examples;
  * ETo = 0.7130 / 0.2579 = 2.764 mm/day (see test-config.h) */
 static void test_Calc_ETo_Normal(void) {
-    (void)printf("\n>>> TC47: %s\n", __func__);
+    (void)printf("\n>>> TC50: %s\n", __func__);
 
     double eto = 0.0;
 
-    AssertStatus("Calc_ETo(G=0, u2=2.0)",
+    AssertStatus("Calc_ETo(G = 0, u2 = 2.0)",
                  Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
                           TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS,
                           TEST_ETO_ES_KPA, TEST_ETO_EA_KPA, &eto),
@@ -1072,14 +1109,14 @@ static void test_Calc_ETo_Normal(void) {
     AssertDouble("ETo [mm/day]", eto, TEST_ETO_EXPECTED, TOL_ETO);
 }
 
-/* TC48: Calc_ETo, G ≠ 0 (accounting for daily soil heat flux);
+/* TC51: Calc_ETo, G ≠ 0 (accounting for daily soil heat flux);
  * tests the G parameter; Rn - G = 7.6 - 1.0 = 6.6 instead of 7.6; ETo = 2.535 mm/day */
 static void test_Calc_ETo_WithSoilHeatFlux(void) {
-    (void)printf("\n>>> TC48: %s\n", __func__);
+    (void)printf("\n>>> TC51: %s\n", __func__);
 
     double eto = 0.0;
 
-    AssertStatus("Calc_ETo(G=1.0)",
+    AssertStatus("Calc_ETo(G = 1.0)",
                  Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_NON_ZERO,
                           TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS,
                           TEST_ETO_ES_KPA, TEST_ETO_EA_KPA, &eto),
@@ -1088,11 +1125,11 @@ static void test_Calc_ETo_WithSoilHeatFlux(void) {
     AssertDouble("ETo with G ≠ 0 [mm/day]", eto, TEST_ETO_G_NONZERO_EXPECTED, TOL_ETO);
 }
 
-/* TC49: Calc_ETo, calm/Stille (u2 = 0);
+/* TC52: Calc_ETo, calm/Stille (u2 = 0);
  * aerodynamic term vanishes: ETo = 0.408 * Δ * Rn / (Δ + γ) = 2.115 mm/day;
  * denominator with u2 = 0: Δ + γ * 1 > 0, no degeneration */
 static void test_Calc_ETo_CalmWind(void) {
-    (void)printf("\n>>> TC49: %s\n", __func__);
+    (void)printf("\n>>> TC52: %s\n", __func__);
 
     double eto = 0.0;
 
@@ -1105,10 +1142,10 @@ static void test_Calc_ETo_CalmWind(void) {
     AssertDouble("ETo in calm [mm/day]", eto, TEST_ETO_CALM_EXPECTED, TOL_ETO);
 }
 
-/* TC50: Calc_ETo, negative Rn, result clamped to 0;
+/* TC53: Calc_ETo, negative Rn, result clamped to 0;
  * with Rn = -5.0: numerator = -0.295 + 0.264 = -0.031 < 0 -> ETo ≈ -0.120 -> clamp to 0 */
 static void test_Calc_ETo_NegativeRn(void) {
-    (void)printf("\n>>> TC50: %s\n", __func__);
+    (void)printf("\n>>> TC53: %s\n", __func__);
 
     double eto = 0.0;
 
@@ -1121,9 +1158,9 @@ static void test_Calc_ETo_NegativeRn(void) {
     AssertDouble("ETo clamped to 0 [mm/day]", eto, TEST_ETO_NEGATIVE_EXPECTED, TOL_ETO);
 }
 
-/* TC51: Calc_ETo, NULL pointer & all STATUS_INVALID_VALUE paths */
+/* TC54: Calc_ETo, NULL pointer & all STATUS_INVALID_VALUE paths */
 static void test_Calc_ETo_Errors(void) {
-    (void)printf("\n>>> TC51: %s\n", __func__);
+    (void)printf("\n>>> TC54: %s\n", __func__);
 
     double eto = 0.0;
 
@@ -1164,10 +1201,65 @@ static void test_Calc_ETo_Errors(void) {
                  STATUS_INVALID_VALUE);
 }
 
-/* TC52: Calc_ETc, normal path;
+/* TC55: Calc_ETo, NaN on each parameter */
+static void test_Calc_ETo_NaN(void) {
+    (void)printf("\n>>> TC55: %s\n", __func__);
+
+    double eto = 0.0;
+
+    AssertStatus("delta  = NaN",
+                 Calc_ETo(NAN, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("Rn     = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, NAN, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("T_mean = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, NAN, TEST_ETO_U2_MS, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("u2     = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, NAN, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("G      = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, NAN,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("gamma  = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        NAN, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS, TEST_ETO_ES_KPA,
+                        TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("ea     = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS,
+                        TEST_ETO_ES_KPA, NAN, &eto),
+                 STATUS_INVALID_VALUE);
+
+    AssertStatus("es     = NaN",
+                 Calc_ETo(TEST_ETO_DELTA_KPA_C, TEST_ETO_RN_MJ, TEST_ETO_G_ZERO,
+                        TEST_ETO_GAMMA_KPA_C, TEST_ETO_TMEAN_C, TEST_ETO_U2_MS,
+                        NAN, TEST_ETO_EA_KPA, &eto),
+                 STATUS_INVALID_VALUE);
+}
+
+/* TC56: Calc_ETc, normal path;
  * ETc = Kc * ETo = 1.15 * 2.764 = 3.179 mm/day */
 static void test_Calc_ETc_Normal(void) {
-    (void)printf("\n>>> TC52: %s\n", __func__);
+    (void)printf("\n>>> TC56: %s\n", __func__);
 
     double etc = 0.0;
 
@@ -1176,9 +1268,9 @@ static void test_Calc_ETc_Normal(void) {
     AssertDouble("ETc [mm/day]", etc, TEST_ETC_EXPECTED, TOL_ETC);
 }
 
-/* TC53: Calc_ETc, NULL pointer & invalid inputs */
+/* TC57: Calc_ETc, NULL pointer & invalid inputs */
 static void test_Calc_ETc_Errors(void) {
-    (void)printf("\n>>> TC53: %s\n", __func__);
+    (void)printf("\n>>> TC57: %s\n", __func__);
 
     double etc = 0.0;
 
@@ -1186,6 +1278,18 @@ static void test_Calc_ETc_Errors(void) {
     AssertStatus("eto < 0",     Calc_ETc(-1.0,  1.0,  &etc), STATUS_INVALID_VALUE);
     AssertStatus("kc = 0",      Calc_ETc(2.764, 0.0,  &etc), STATUS_INVALID_VALUE);
     AssertStatus("kc < 0",      Calc_ETc(2.764, -0.5, &etc), STATUS_INVALID_VALUE);
+}
+
+/* TC58: Calc_ETc, NaN on each parameter */
+static void test_Calc_ETc_NaN(void) {
+    (void)printf("\n>>> TC58: %s\n", __func__);
+
+    double etc = 0.0;
+
+    AssertStatus("eto = NaN",
+                 Calc_ETc(NAN, TEST_ETC_KC, &etc), STATUS_INVALID_VALUE);
+    AssertStatus("kc  = NaN",
+                 Calc_ETc(TEST_ETC_ETO_MM, NAN, &etc), STATUS_INVALID_VALUE);
 }
 
 /* *** * * * ****** * * ******* * * *** * *** * * * *** * * ***** * * * **** *** *
@@ -1252,6 +1356,9 @@ int main(void) {
 
     /* Air humid., atm. press., psychrom., vap. press. */
     RUN_TEST(test_AirHumidity_Update_MinMaxTracking);
+    RUN_TEST(test_AirHumidity_NaN);
+    RUN_TEST(test_AirHumidity_Infinity);
+    RUN_TEST(test_AirHumidity_OutOfRange);
     RUN_TEST(test_Calc_PressureFromElevation_SeaLevel);
     RUN_TEST(test_Calc_PressureFromElevation_FAO56_ex2);
     RUN_TEST(test_Calc_AtmosphericParameters_SeaLevel);
@@ -1274,8 +1381,10 @@ int main(void) {
     RUN_TEST(test_Calc_ETo_CalmWind);
     RUN_TEST(test_Calc_ETo_NegativeRn);
     RUN_TEST(test_Calc_ETo_Errors);
+    RUN_TEST(test_Calc_ETo_NaN);
     RUN_TEST(test_Calc_ETc_Normal);
     RUN_TEST(test_Calc_ETc_Errors);
+    RUN_TEST(test_Calc_ETc_NaN);
 
     return UNITY_END();
 }

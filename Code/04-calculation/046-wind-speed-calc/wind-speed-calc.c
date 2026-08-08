@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "wind-speed-calc.h"
 
 /* Constants per Prandtl logarithmic profile (eq. 47) * * * * * ****** * * * *** * */
@@ -37,13 +37,7 @@ Status WindSpeed_Init(WindSpeedData *data) {
         return STATUS_NULL_POINTER;
     }
 
-    data->u_z_min_m_s  = 0.0;
-    data->u_z_max_m_s  = 0.0;
-    data->u_z_mean_m_s = 0.0;
-    data->u_sum_m_s    = 0.0;
-    data->height_m     = 0.0;
-    data->sample_count = 0U;
-    data->initialized  = false;
+    memset(data, 0, sizeof(*data));
 
     return STATUS_OK;
 }

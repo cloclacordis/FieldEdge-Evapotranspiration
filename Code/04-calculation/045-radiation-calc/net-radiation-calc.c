@@ -2,17 +2,16 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "net-radiation-calc.h"
+#include "../../03-validation/034-math-utils/math-utils.h"
 
 Status NetRadiation_Init(NetRadiationData *data) {
     if (data == NULL) {
         return STATUS_NULL_POINTER;
     }
     
-    data->Rns_daily   = 0.0;
-    data->Rnl_daily   = 0.0;
-    data->Rn_daily    = 0.0;
+    memset(data, 0, sizeof(*data));
     data->initialized = true;
     
     return STATUS_OK;
@@ -73,21 +72,14 @@ Status Calc_NetRadiation(NetRadiationData *out,
     if (solar->Rso_daily <= 0.0) {
         Rs_over_Rso = 0.0;
     } else {
-        Rs_over_Rso = solar->Rs_daily / solar->Rso_daily;
-        if (Rs_over_Rso > 1.0) {
-            Rs_over_Rso = 1.0;
-        }
+        Rs_over_Rso = Min(solar->Rs_daily / solar->Rso_daily, 1.0);
     }
 
     /* Cloudiness correction: 1.35 * Rs/Rso - 0.35;
      * under clear sky (Rs/Rso -> 1): factor ->   1.0 -> Rnl maximum;
      * under overcast  (Rs/Rso -> 0): factor -> -0.35 -> bounded to 0;
      * a negative factor would mean Rnl < 0, unrealistic for daily time step */
-    double cloudiness_factor = (1.35 * Rs_over_Rso) - 0.35;
-
-    if (cloudiness_factor < 0.0) {
-        cloudiness_factor = 0.0;
-    }
+    const double cloudiness_factor = Max((1.35 * Rs_over_Rso) - 0.35, 0.0);
 
     const double Rnl = sigma_T4_avg * humidity_factor * cloudiness_factor;
 

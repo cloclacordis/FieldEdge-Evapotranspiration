@@ -3,8 +3,7 @@
 
 #include <math.h>
 #include "validation.h"
-
-#define VALIDATION_PI (3.14159265358979323846)
+#include "../034-math-utils/math-utils.h"
 
 bool ValidTemperatureC(const double value) {
     return isfinite(value)
@@ -12,10 +11,16 @@ bool ValidTemperatureC(const double value) {
         && (value <= 100.0);
 }
 
+bool ValidHumidityPercent(const double value) {
+    return isfinite(value)
+        && (value >= 0.0)
+        && (value <= 100.0);
+}
+
 bool ValidLatitudeRad(const double phi) {
     return isfinite(phi)
-        && (phi >= -(VALIDATION_PI / 2.0))
-        && (phi <=  (VALIDATION_PI / 2.0));
+        && (phi >= -(PI / 2.0))
+        && (phi <=  (PI / 2.0));
 }
 
 bool ValidDayOfYear(const uint16_t J) {

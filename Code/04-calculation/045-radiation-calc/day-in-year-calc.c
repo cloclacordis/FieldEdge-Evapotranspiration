@@ -2,11 +2,11 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <math.h>
-#include <stddef.h>
+#include <string.h>
 #include "day-in-year-calc.h"
 #include "../../03-validation/032-validation/validation.h"
+#include "../../03-validation/034-math-utils/math-utils.h"
 
-#define DAY_CALC_PI            (3.14159265358979323846)
 #define DAY_CALC_TWO_PI_365    (0.01721420632103996)    /* 2pi / 365 ** * ** ** **** * * */
 
 /* FAO56 constants */
@@ -19,12 +19,7 @@ Status DayCalc_Init(DayData* data) {
         return STATUS_NULL_POINTER;
     }
     
-    data->J            = 0U;
-    data->dr           = 0.0;
-    data->delta_rad    = 0.0;
-    data->omega_s_rad  = 0.0;
-    data->N_hours      = 0.0;
-    data->initialized  = false;
+    memset(data, 0, sizeof(*data));
 
     return STATUS_OK;
 }
@@ -62,13 +57,13 @@ Status DayCalc_Update(DayData* data, const uint16_t J, const LocationData* loc) 
     if (arg > 1.0) {
         omega_s = 0.0;           /* Polar night */
     } else if (arg < -1.0) {
-        omega_s = DAY_CALC_PI;   /* Polar day * */
+        omega_s = PI;   /* Polar day * */
     } else {
         omega_s = acos(arg);
     }
 
     /* Maximum daylight duration [hour] (eq. 34) */
-    const double N = (24.0 / DAY_CALC_PI) * omega_s;
+    const double N = (24.0 / PI) * omega_s;
 
     data->J            = J;
     data->dr           = dr;

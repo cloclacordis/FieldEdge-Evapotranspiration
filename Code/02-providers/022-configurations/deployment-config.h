@@ -15,13 +15,13 @@ extern "C" {
 #define CONFIG_LATITUDE_MIN    (0.0)    /* FAO56, ex.8: 20°S, southern hemisphere */
 #define CONFIG_ELEVATION_M     (0.0)    /* Sea level * ** *** * ** * *** * * ** * */
 
-/* Illuminance threshold for binary sunshine counter */
-#define CONFIG_BRIGHT_LUX_THRESHOLD (20000.0)
+/* Illuminance threshold for binary sunshine counter *** * * ********* * * ***** * *** */
+#define CONFIG_BRIGHT_LUX_THRESHOLD (20000.0)  /* Preliminary estimate, not calibrated */
 
 /* Illuminance sensor polling period */
 #define CONFIG_SAMPLE_PERIOD_SEC (60U)
 
-/* Anemometer parameters above ground surface */
+/* Anemometer parameters above ground surface * ***** *** ** ***** * * * *** * *** * * * * * **** * */
 #define CONFIG_WIND_HEIGHT_WMO_M (10.0)    /* WMO standard: 10 m (standard meteorological stations) */
 #define CONFIG_WIND_HEIGHT_FAO_M (2.0)     /* FAO56 standard: 2 m (agrometeorological stations) ** **/
 

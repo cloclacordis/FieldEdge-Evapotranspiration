@@ -12,6 +12,8 @@
 #define TETENS_CONST_C    (237.3)     /* Tetens equation constant for e(T) per FAO56 */
 #define SVP_CS_CONST_D    (4098.0)    /* Constant for slope of SVP curve equation ** */
 
+#define SLOPE_DELTA_EPS   (1e-9)      /* Epsilon = 10^-9, or 0.000000001 *** * *** * */
+
 /* Internal (non-public) helper function: Magnus-Tetens equation (eq. 11) */
 static double Calc_TetensSaturationPressure(const double temperature_c) {
     const double exp_term = (TETENS_CONST_B * temperature_c) / (temperature_c + TETENS_CONST_C);
@@ -63,7 +65,7 @@ Status Calc_SlopeDelta(const AirTemperatureData* Tdata, double* out_kPa_per_C) {
     const double e_Tmean = Calc_TetensSaturationPressure(Tdata->T_mean_C);
     const double denom = (Tdata->T_mean_C + TETENS_CONST_C) * (Tdata->T_mean_C + TETENS_CONST_C);
 
-    if (denom == 0.0) {
+    if (fabs(denom) < SLOPE_DELTA_EPS) {
         return STATUS_INVALID_VALUE;
     }
 
@@ -87,12 +89,12 @@ Status Calc_ActualVapourPressure(double *ea_kPa, const AirTemperatureData *temp,
 
     Status s = Calc_SaturationVapourPressure(temp->T_min_C, &e_min);
     if (s != STATUS_OK) {
-		return s;
+        return s;
 	}
 
     s = Calc_SaturationVapourPressure(temp->T_max_C, &e_max);
     if (s != STATUS_OK) {
-		return s;
+        return s;
 	}
 
     /* ea = [e(Tmin) * RHmax/100 + e(Tmax) * RHmin/100] / 2 */

@@ -5,9 +5,7 @@
 #include <stddef.h>
 #include "geolocation-calc.h"
 #include "../../02-providers/022-configurations/deployment-config.h"
-
-/* Constant for degrees to radians conversion */
-#define DEG_TO_RAD (3.14159265358979323846 / 180.0)
+#include "../../03-validation/034-math-utils/math-utils.h"
 
 /* Convert latitude from DMS to decimal degrees */
 Status Location_DMS_to_decimal(const double degrees, const double minutes, double* decimal_deg) {

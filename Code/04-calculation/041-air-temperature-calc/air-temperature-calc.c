@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-#include <stddef.h>
+#include <string.h>
 #include "air-temperature-calc.h"
 #include "../../03-validation/032-validation/validation.h"
 
@@ -10,11 +10,7 @@ Status AirTemperature_Init(AirTemperatureData* data) {
         return STATUS_NULL_POINTER;
     }
 
-    data->T_min_C     = 0.0;
-    data->T_max_C     = 0.0;
-    data->T_mean_C    = 0.0;
-    data->timestamp   = 0U;
-    data->initialized = false;
+    memset(data, 0, sizeof(*data));
 
     return STATUS_OK;
 }
