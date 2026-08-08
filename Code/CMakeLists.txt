@@ -1,7 +1,7 @@
 # ### SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Tim Alexeenko (@cloclacordis) # ###
 
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 3.31)
 project(FAO56 C)
 
 set(CMAKE_C_STANDARD 11)
