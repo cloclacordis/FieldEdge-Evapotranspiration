@@ -55,7 +55,7 @@ Status WindSpeed_Update(WindSpeedData *data, const double speed_m_s, const doubl
 
     if (data->initialized) {
         /* From the 2nd call onward, anemometer height must be constant */
-        double diff = height_m - data->height_m;
+        const double diff = height_m - data->height_m;
         if ((diff > WIND_HEIGHT_TOL_M) || (diff < -WIND_HEIGHT_TOL_M)) {
             return STATUS_INVALID_VALUE;
         }
@@ -94,8 +94,17 @@ Status Calc_WindSpeedAt2m(const double u_z, const double z, double *out_u2) {
         return STATUS_INVALID_VALUE;
     }
 
-    double log_arg = C_EQ47_MULT * z - C_EQ47_SUB;
-    *out_u2 = u_z * (C_EQ47_NUM / log(log_arg)); /* Eq. 47 */
+    const double log_arg = C_EQ47_MULT * z - C_EQ47_SUB;
+    if (log_arg <= 0.0) {
+        return STATUS_INVALID_VALUE;
+    }
+
+    const double u2 = u_z * (C_EQ47_NUM / log(log_arg)); /* Eq. 47 */
+    if (!isfinite(u2)) {
+        return STATUS_INVALID_VALUE;
+    }
+
+    *out_u2 = u2;
 
     return STATUS_OK;
 }

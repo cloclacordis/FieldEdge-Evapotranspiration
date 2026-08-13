@@ -1,4 +1,8 @@
-# devlog10. Дилемма default J, конфигурация и другое
+# devlog10. Дилемма "default J", конфигурация и другое
+
+*An architectural entry. Introduces a new `02-providers` layer separating deployment-time configuration (`deployment-config.h`, e.g. latitude, elevation, sensor thresholds — “Type A” data) from FAO-56 model constants (“Type B”), sensor/measured data (“Type C”), and derived data (“Type D”). Adds a `date-provider` module wrapping `time()`/`localtime()` to supply the real calendar day-of-year to the orchestration layer, replacing a previously hardcoded J = 246. Also adds a `test-config.h` file to centralize FAO-56 reference values and tolerances used across the test file, keeping them out of production code. New tests (25–27) validate the date provider and add a real-time-delay emulation of the sunshine sensor polling loop, using `SleepMs()` across platforms.*
+
+* * *
 
 ## Небольшие улучшения
 
@@ -601,5 +605,3 @@ extern "C" {
 ![](resources/1000-main-test-case-25.png)  
 ![](resources/1001-main-test-case-26.png)  
 ![](resources/1002-main-test-case-27.png)
-
-* * *

@@ -1,5 +1,9 @@
 # devlog11. Своевременные улучшения
 
+*Makes sensor timestamp fields use real `time(NULL)` values instead of mock zeros (so the monotonicity test from devlog10 is actually meaningful). Formalizes and documents, via a table, which data structures need an `initialized` flag and which don’t, based on whether they pass through multiple lifecycle stages (`Init -> Update -> downstream use`) or are filled in a single call. Finds and closes a gap: `LocationData` was missing the flag despite needing it, and propagates the fix through all dependent modules and their test cases. Also replaces several “magic numbers” in older tests with named constants from `test-config.h`/`deployment-config.h`, and adds a new test (TC28) for the `Location_Init()` initialization flag.*
+
+* * *
+
 ## Модуль чтения освещенности неба `sunshine-lux-read`
 
 До сих пор в функции `SensorLux_ReadInstant()` и в структуре `SunshineLuxSample;` для заполнения поля временной метки `timestamp` использовалось *mock*-значение `SENSOR_MOCK_TIMESTAMP`, равное `0`. В новом тесте № 27, который мы написали на предыдущем шаге, мы проверяем монотонность меток `timestamps[i] < timestamps[i - 1U]`. При постоянном отношении `0 < 0` проверка всегда проходит - но удовлетворяет ли это нашим пожеланиям к содержанию теста? Очевидно, что теперь, после подключения модуля, предоставляющего нам значения календарных даты и времени, мы можем изменить это место в программе.
@@ -350,5 +354,3 @@ out_sample->timestamp = (uint32_t)time(NULL);
 
 - автоматизируем тестирование,
 - перейдем к завершающим вычислениям блока радиации.
-
-* * *

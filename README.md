@@ -35,7 +35,8 @@ Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `init
 
 Beyond the FAO-56 reference tests below, the codebase underwent a deliberate hardening pass before this release:
 
-* Both build targets compile with the following compiler flags: `-Wall -Wextra -Wfloat-equal -Wconversion -Wshadow -Werror`.  
+* Both build targets compile with the following compiler flags: `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
+* The C11 standard compliance is strictly enforced, extensions are disabled (for the `fao56_app` target — the code intended for MCU deployment): `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
 * The codebase was checked with the `cppcheck` static analyzer.  
 * Every numeric input to the calculation layer is validated for range and for `NaN`/`Infinity` before use.  
 * CI (GitHub Actions) builds both targets and runs the full test suite on every push and pull request.
@@ -58,7 +59,7 @@ Reference values and tolerances are documented in `Code/06-test/test-config.h`.
 
 * Sensors are mock constants; no real hardware is involved yet.  
 * `time()` from `<time.h>` is used for the current day of year and lux timestamps; on a bare MCU, this requires RTC integration.  
-* State is not persisted between runs (EEPROM/Flash persistence is planned for **v0.2.0**).  
+* State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.0).  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
 * The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.
@@ -68,7 +69,7 @@ Reference values and tolerances are documented in `Code/06-test/test-config.h`.
 ## Status and roadmap
 
 * **v0.1.0 (current)** — the full computational core, validated on PC against FAO-56 worked examples, 58 passing tests, hardened through a comprehensive review (compiler warnings, static analysis, `NaN`/range checks on every input).  
-* **v0.2.0 (next)** — port to STM32 with an RTOS-based architecture: real sensor drivers, an RTC-backed time source, and a periodic sampling model in place of the current single-shot PC run.  
+* **v0.2.0 (next)** — port to STM32: real sensor drivers, an RTC-backed time source, and a periodic sampling model.  
 * **v0.3.0** — LoRaWAN telemetry and field deployment.
 
 * * *
@@ -76,7 +77,8 @@ Reference values and tolerances are documented in `Code/06-test/test-config.h`.
 ## Development journal
 
 Step-by-step development notes (in Russian) are in `Docs/Devjournal/Devlogs/`.  
-See `Docs/Devjournal/Disclaimer.md` for context on the format and purpose of those notes.
+See `Docs/Devjournal/Disclaimer.md` for context on the format and purpose of those notes.  
+See `Docs/Devjournal/Index.md` for the devlog table of contents and English synopses.
 
 * * *
 

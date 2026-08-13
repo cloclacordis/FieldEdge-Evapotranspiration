@@ -1,5 +1,9 @@
 # devlog14. Атмосферные модули и функции
 
+*Adding the humidity and atmospheric-pressure side of the equation. Builds an air-humidity read/calc pair (mirroring the existing air temperature pattern), a psychrometric-constant module (FAO-56 eq. 8, γ from atmospheric pressure), and an atmospheric-pressure model (eq. 7, pressure as a function of elevation) — the latter explicitly designed as a three-tier fallback chain (real barometric sensor -> elevation-based model -> hardcoded sea-level constant), with the priority ordering decided in the orchestration layer rather than baked into any single module, preserving the project’s “read modules never compute” rule. Adds `Calc_ActualVapourPressure()` (eq. 17, ea from humidity and temperature extremes) and a general-purpose `Calc_SaturationVapourPressure(T, ...)`, then retires the now-redundant `Calc_SaturationVapourPressureForTmean()`. Eight new tests (33–40) check against FAO-56 worked examples 2, 3, and 5.*
+
+* * *
+
 ## Текущие задачи
 
 Мы хотим на этом шаге и в этом девлоге разработать **модуль влажности** и **функции давления**, кроме того, также и **модуль атмосферных параметров**. Итак, мы хотим здесь:
@@ -587,9 +591,7 @@ Status Calc_ActualVapourPressure(double *ea_kPa, const AirTemperatureData *temp,
 **Мы пришли к следующему решению.** Модуль чтения непосредственных значений атмосферного давления `atm-pressure-read`,"как и положено" (в рамках нашей архитектуры), будет использовать функции как собственно чтения - `read_Instant()`, так и введения значений по умолчанию - `read_Default()`. В то же время создадим подмодуль в слое вычислений, который будет вычислять и хранить значение *P* на основе рекомендуемых процедур *FAO56*. Таким образом, мы будем иметь **три возможных источника** *P*, которые в порядке приоритета от высшего к низшему мы определим следующим образом:
 
 - сенсор и функция `SensorPressure_ReadInstant()` -> непосредственное значение (для ПК-версии - *mock*-константа);
-
 - модель *FAO56 (eq.7)* и функция `Calc_PressureFromElevation()` -> вычисление *P* как функции высоты будет использоваться, когда сенсор недоступен или данные повреждены;
-
 - константа в модуле чтения и функция `SensorPressure_ReadDefault()` -> "абсолютный" *fallback* будет использоваться как последний уровень защиты.
 
 **Выбор источника** определяется (*to provide*) в процессе оркестрации в файле `main.c` - ни измерительный, ни вычислительный слои ничего об этом не знают.
@@ -1233,5 +1235,3 @@ static void test_Calc_ActualVapourPressure_FAO56_ex5(void) {
 - модуль скорости ветра,
 - финальное уравнение Пенмана-Монтейта с добавлением *ET<sub>c</sub>*,
 - итоговые архитектурные диаграммы и схемы.
-
-* * *

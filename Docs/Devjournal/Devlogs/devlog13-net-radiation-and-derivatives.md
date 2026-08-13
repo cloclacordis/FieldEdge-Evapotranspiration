@@ -1,5 +1,9 @@
 # devlog13. Модуль чистой радиации Rn и деривативы
 
+*Implements the net radiation module: net shortwave radiation Rns (eq. 38, using the FAO-56 reference grass albedo of 0.23), net longwave radiation Rnl (eq. 39, Stefan–Boltzmann thermal emission corrected for humidity and cloudiness), and their combination into net radiation Rn (eq. 40). Includes an explanation of why each of Rnl’s three multiplicative factors behaves the way it does. Implementation clamps the cloudiness factor to avoid a physically impossible negative Rnl. Four new tests (29–32) verify against FAO-56 worked examples 11 and 12 (Rio de Janeiro), matching within tolerances explicitly justified by the documentation’s own intermediate rounding.*
+
+* * *
+
 ## Обзор уравнений
 
 На этом шаге мы собираемся разработать модуль для вычисления **чистой радиации** *R<sub>n</sub>* и деривативов *R<sub>ns</sub>, R<sub>nl</sub>*. Будем вычислять все в единой функции `Calc_NetRadiation()`.
@@ -522,5 +526,3 @@ Rn  = 11.17 - 3.53           = 7.64 МДж м-2 сут-1          (FAO56: 7.6  �
 
 ![](resources/1305-main-test-tc29.png)  
 ![](resources/1306-main-test-full32.png)
-
-* * *

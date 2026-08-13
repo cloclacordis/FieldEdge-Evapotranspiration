@@ -1,5 +1,9 @@
 # devlog02. Разработка первых модулей
 
+*First working code. Builds the minimal vertical slice: a mock air-temperature sensor reading, a module computing daily min/max/mean temperature, and a vapour-pressure module computing saturation vapour pressure and the slope-of-curve term (“delta”) per FAO-56 eq. 9–13. Wires it all together in a first `main.c` and verifies output against FAO-56 Annex 2 tables at four temperature values (1.0, 20.0, 27.5, 48.5 °C), all matching within ~0.0005 kPa.*
+
+* * *
+
 ## Определение первого шага
 
 Посмотрим на уравнение Пенмана–Монтейта еще раз (FAO56 1998: 24, eq. 6):
@@ -149,6 +153,8 @@ void AirTemperature_Update(AirTemperatureData* data, const double T_inst, const 
 ```
 
 > Заметим, что при тестовой оркестрации, в файле **`main.c`**, аргументу `T_inst` будет присвоено значение мгновенно измеренных данных, имитирующих значение сенсоров: **`T_inst = SensorTemperature_ReadInstant()`**. Тестовое значение временной метки будет равно нулю: `timestamp = 0`.
+
+> *UPD:* впоследствии паттерн инициализации будет изменен на более надежный - здесь представлено раннее и временное решение с целью быстрого запуска первого компилируемого кода.
 
 * * *
 
@@ -366,5 +372,3 @@ int main(void) {
 - ввести проверки согласно стандарту MISRA C:2012;
 - добавить возможность чтения различных значений для **T<sub>min</sub>**, **T<sub>max</sub>**;
 - добавить возможность выбирать значения по умолчанию, если данные измерений повреждены или недоступны.
-
-* * *

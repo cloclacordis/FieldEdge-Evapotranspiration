@@ -1,8 +1,12 @@
 # devlog07. Физический смысл и геометрические аспекты внеземного излучения
 
+*An essay, written to make the astronomy and trigonometry behind Ra intuitively clear, and as an optional postscript, to sketch the broader picture of solar energy flow through plant transpiration and photosynthesis. Covers: the solar constant and its origin in fusion at the Sun’s core; Earth’s elliptical orbit and the seasonal variation in received energy; solar declination and day length as functions of Earth’s axial tilt; and, in the postscript, why plants transpire so much water relative to the CO2 they fix (stomatal gas exchange trade-off, cohesion-tension mechanism of water transport, C4/CAM photosynthesis as evolved responses, and open questions about engineering around the transpiration “cost”).*
+
+* * *
+
 ## Введение
 
-Запись посвящена объяснению **физического смысла и геометрических аспектов** как самого процесса **внеземного излучения** (*extraterrestrial radiation, R<sub>a</sub>*), так и процесса его вычисления в уравнении эталонной эвапотранспирации [Пенмана–Монтейта](https://en.wikipedia.org/wiki/Penman%E2%80%93Monteith_equation) (*Penman–Monteith equation, reference evapotranspiration, RET, ET<sub>o</sub>*). Эту заметку можно использовать для лучшего понимания технической документации [*FAO56*](https://www.fao.org/4/x0490e/x0490e00.htm), 
+Запись посвящена объяснению **физического смысла и геометрических аспектов** как самого процесса **внеземного излучения** (*extraterrestrial radiation, R<sub>a</sub>*), так и процесса его вычисления в уравнении эталонной эвапотранспирации [Пенмана–Монтейта](https://en.wikipedia.org/wiki/Penman%E2%80%93Monteith_equation) (*Penman–Monteith equation, reference evapotranspiration, RET, ET<sub>o</sub>*). Эту заметку можно использовать для лучшего понимания технической документации [*FAO56*](https://www.fao.org/4/x0490e/x0490e00.htm).
 
 Первоначально, в процессе разработки программного обеспечения и в ходе документации этого процесса, внимание на внеземном излучении было сосредоточено потому, что из-за тригонометрических и астрономических аспектов этот член уравнения представлялся одним из наиболее трудных для понимания физического смысла вычислений. Представлялось, что это ведет к затруднению ясного и связного взгляда на процесс эвапотранспирации в целом и на программное проектирование вычислений.
 
@@ -195,5 +199,3 @@
 Так или иначе, главной «проблемой» является то, что является и главной особенностью растения как активного компонента биосферы: **растение встроено в планетарную физику** и не является обособленным автоматом. Транспирация — не дефект устройства растения, а следствие того, каким образом наземная фотосинтезирующая жизнь встроена в обмен веществом и энергией между сушей и атмосферой. Через испарение растения рассеивают значительную долю энергии излучения, приходящейся на поверхность суши. Можно представить биосферу без транспирации: поверхность суши нагревается, изменяются облачные процессы, осадки, атмосферная циркуляция, климат.
 
 Кажется, вопросы эффективности ирригации и управления водными ресурсами в сельском хозяйстве имеют свои пределы — главным образом в постановке проблемы исходя из среды и внешних условий. Вполне может быть, что дальние решения будут связаны с тем, чтобы разъединить потоки внутри самих физических механизмов жизни и иначе реорганизовать процессы в пространстве растения.
-
-* * *

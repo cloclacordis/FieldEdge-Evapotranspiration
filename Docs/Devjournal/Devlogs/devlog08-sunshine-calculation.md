@@ -1,5 +1,9 @@
 # devlog08. Модуль вычисления солнечного сияния
 
+*Builds the sunshine-duration accumulator module (`sunshine-lux-calc`), which converts a series of binary “bright/not bright” lux readings (mimicking a Campbell–Stokes heliograph) into hours of actual sunshine, n — needed for the Angström–Prescott solar radiation formula. This entry finds and fixes a logic bug: the daily data-source flag (`MEASURED` vs `DEFAULT`) never updated to `MEASURED` because of a flawed `if/else if` condition combined with a `DEFAULT`-initialized starting state — traced from a mismatch in program output, then fixed with explicit `has_any_samples`/`has_default_samples` flags finalized once per day. Also notes an open design question (“what to do when the calendar date itself is unavailable”) deferred to devlogs 09–10.*
+
+* * *
+
 ## Улучшения предыдущего кода
 
 Этот девлог посвящен разработке модуля вычисления продолжительности солнечного сияния, который относится как дериватив к модулю **солнечной радиации** (*solar radiation, R<sub>s</sub>*). Прежде чем переходить к разработке, сделаем небольшой обзор найденных в предшествующем коде проблем и внесем улучшения в существующий код.
@@ -221,7 +225,7 @@ Status SunshineLux_ResetDay(SunshineLuxData* data);
  * Логику порогового сравнения можно менять в одном месте (например, для калибровки или добавления гистерезиса) */
 static bool SunshineLux_IsBright(const SunshineLuxData* data, const double lux) {
     return lux >= data->threshold_lux;
-};
+}
 
 Status SunshineLux_Init(SunshineLuxData* data, const double threshold_lux, const uint32_t sample_period_sec) {
     if (data == NULL) {
@@ -734,5 +738,3 @@ Status SunshineLux_FinalizeDay(SunshineLuxData* data) {
 - напишем модуль вычисления радиации *R<sub>s</sub>*,
 - обновим оркестрацию и тестовые наборы,
 - вернемся к разрешению нашей дилеммы "default J".
-
-* * *

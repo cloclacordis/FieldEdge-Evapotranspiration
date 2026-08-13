@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.31)
 project(FAO56 C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 ### ## # Source code files used for both targets # ## ###
 set(FAO56_SOURCES
@@ -89,7 +90,8 @@ add_executable(fao56_app
 )
 
 target_link_libraries(fao56_app m)
-target_compile_options(fao56_app PRIVATE -Wall -Wextra -Werror -Wfloat-equal -Wconversion -Wshadow)
+target_compile_options(fao56_app PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
+set_target_properties(fao56_app PROPERTIES C_EXTENSIONS OFF)
 
 ### ## # Target 2: test binary [unity] # ## ###
 include(FetchContent)
@@ -110,7 +112,7 @@ add_executable(fao56_test
 
 target_link_libraries(fao56_test m unity)
 target_compile_definitions(unity PUBLIC UNITY_INCLUDE_DOUBLE)
-target_compile_options(fao56_test PRIVATE -Wall -Wextra -Werror -Wfloat-equal -Wconversion -Wshadow)
+target_compile_options(fao56_test PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
 
 # CTest
 enable_testing()

@@ -1,5 +1,9 @@
 # devlog16. Уравнение Пенмана-Монтейта
 
+*The capstone entry of the v0.1.0 computational core: assembles all previously built derivatives into the full FAO-56 Penman–Monteith reference evapotranspiration equation (eq. 6, `Calc_ETo`) and the crop evapotranspiration equation (eq. 56, `Calc_ETc = Kc × ETo`). Handles two physically meaningful edge cases explicitly: clamping actual vapour pressure to saturation vapour pressure when relative humidity would otherwise exceed 100% (a measurement-error case), and clamping ETo to zero when net radiation is negative (winter/polar-night conditions, where the raw formula could otherwise go negative). Adds a default crop coefficient (Kc mid = 1.00, reference grass) to the deployment configuration. Seven new tests (47–53) verify the equation end-to-end against a composite scenario built from earlier verified intermediate values, plus explicit soil-heat-flux, calm-wind, and negative-Rn edge cases. Closes with a cosmetic overhaul of the orchestration’s terminal output formatting (aligned columns, English labels/translation).*
+
+* * *
+
 ## Напишем модуль вычисления эталонной эвапотранспирации
 
 Итак, теперь, когда основное вычислительное ядро, все члены и деривативы уравнения Пенмана-Монтейта разработаны и протестированы, мы можем, наконец, собрать уравнение воедино и вычислить его - и тем самым завершить первый крупный шаг в разработке нашего проекта, зафиксировав процесс разработки проекта как **v0.1.0**.
@@ -13,8 +17,6 @@
 Будем использовать также вычисление эвапотранспирации культуры *ET<sub>c</sub>* (eq. 56):
 
 ![](resources/1600-etc-eq56.png)
-
-
 
 * * *
 
@@ -31,7 +33,7 @@ extern "C" {
 #include "../../03-validation/033-status/status.h"
 
 /* Суточный поток тепла в почве G ≈ 0 (eq. 42): аргумент G_mj_m2_day в Calc_ETo() для суточных расчетов */
-#define ETO_G_DAILY_MJ_M2_DAY  (0.0)    /* МДж м⁻² сут⁻¹ */
+#define ETO_G_DAILY_MJ_M2_DAY  (0.0)    /* МДж м-2 сут-1 */
 
 /* Эталонная эвапотранспирация = уравнение Пенмана-Монтейта (eq. 6):
  * - если ea > es (RH > 100%): ea приравнивается к es (VPD = 0);
@@ -39,7 +41,7 @@ extern "C" {
  * Возвращает: STATUS_OK, STATUS_NULL_POINTER или STATUS_INVALID_VALUE.               */
 Status Calc_ETo(
     double  delta_kpa_c,       /* наклон кривой давления насыщения [кПа/°C]; > 0      */
-    double  Rn_mj_m2_day,      /* чистая радиация [МДж м⁻² сут⁻¹]; может быть < 0     */
+    double  Rn_mj_m2_day,      /* чистая радиация [МДж м-2 сут-1]; может быть < 0     */
     double  G_mj_m2_day,       /* суточный поток тепла в почве; ETO_G_DAILY_MJ_M2_DAY */
     double  gamma_kpa_c,       /* психрометрическая константа [кПа/°C]; > 0           */
     double  T_mean_c,          /* средняя суточная температура [°C]                   */
@@ -121,6 +123,8 @@ Status Calc_ETc(const double eto_mm_day, const double kc, double *out_etc_mm_day
 }
 ```
 
+> *UPD:* Заметим здесь относительно записи и логики клэмпа для ea "RH не может превышать 100% (иначе это ошибка измерения)". В дальнейшем здесь будет новая функция `Min()` из файла `math-utils.h` (см. devlog18). Что важно: остается проблема с тем, что хотя физически не может быть влажности выше 100%, все же возможна ситуация, когда датчик измерил, например, 108% - и это вопрос не математики и кодирования, а архитектуры качества данных. Здесь нужно будет улучшить логику. К примеру: RH = 108% по факту измерений => quality = INVALID, однако текущая логика сделает RH = 100% и qality = VALID. Это ненадежно. Нужны изменения с учетом роли качества данных.
+
 * * *
 
 ## Обновим файл оркестрации `main.c`
@@ -174,7 +178,7 @@ double etc_mm_day = 0.0;
     /* Эталонная эвапотранспирация (eq. 6, Penman-Monteith)                  */
     status = Calc_ETo(
         delta,                               /* Δ [кПа/°C]                   */
-        net_radiation.Rn_daily,              /* Rn [МДж м⁻² сут⁻¹]           */
+        net_radiation.Rn_daily,              /* Rn [МДж м-2 сут-1]           */
         ETO_G_DAILY_MJ_M2_DAY,               /* G = 0 для суточного (eq. 42) */
         atmos_data.gamma_kPa_per_C,          /* γ [кПа/°C]                   */
         temperature_data.T_mean_C,           /* T_mean [°C]                  */
@@ -194,6 +198,8 @@ double etc_mm_day = 0.0;
         return PrintStatusAndReturn("Ошибка вычисления ETc (eq. 56): ", status);
     }
 ```
+
+> *UPD:* проверки входов `isfinite()` для функций `Calc_ETo()` и `Calc_ETc()` будут добавлены впоследствии (см. **devlog18**).
 
 * * *
 
@@ -225,7 +231,7 @@ double etc_mm_day = 0.0;
  * TC47-TC53: Эталонная эвапотранспирация ETo (FAO56 eq. 6) и ETc (FAO56 eq. 56)
  *
  * TC47-TC50 используют составной сценарий из верифицированных примеров FAO56:
- *   delta = 0.1447 кПа/°C (TC1, T = 20°C),  Rn = 7.6 МДж м⁻² сут⁻¹ (TC29),
+ *   delta = 0.1447 кПа/°C (TC1, T = 20°C),  Rn = 7.6 МДж м-2 сут-1 (TC29),
  *   gamma = 0.0674 кПа/°C (TC36),           T_mean = 20.0°C,
  *   es    = 2.3383 кПа (TC1),               ea = 1.70 кПа (TC40), u2 = 2.0 м/с.
  *
@@ -244,7 +250,7 @@ double etc_mm_day = 0.0;
 
 /* Общие входные данные TC47-TC50 */
 #define TEST_ETO_DELTA_KPA_C         (0.1447)   /* кПа/°C, из TC1          */
-#define TEST_ETO_RN_MJ               (7.6)      /* МДж м⁻² сут⁻¹, из TC29  */
+#define TEST_ETO_RN_MJ               (7.6)      /* МДж м-2 сут-1, из TC29  */
 #define TEST_ETO_GAMMA_KPA_C         (0.0674)   /* кПа/°C, из TC36         */
 #define TEST_ETO_TMEAN_C             (20.0)     /* °C                      */
 #define TEST_ETO_U2_MS               (2.0)      /* м/с                     */
@@ -252,11 +258,11 @@ double etc_mm_day = 0.0;
 #define TEST_ETO_EA_KPA              (1.70)     /* кПа, из TC40            */
 
 /* TC47: G = 0, u2 = 2.0 */
-#define TEST_ETO_G_ZERO              (0.0)      /* МДж м⁻² сут⁻¹           */
+#define TEST_ETO_G_ZERO              (0.0)      /* МДж м-2 сут-1           */
 #define TEST_ETO_EXPECTED            (2.764)    /* мм/сут                  */
 
 /* TC48: G ≠ 0 */
-#define TEST_ETO_G_NON_ZERO          (1.0)      /* МДж м⁻² сут⁻¹           */
+#define TEST_ETO_G_NON_ZERO          (1.0)      /* МДж м-2 сут-1           */
 #define TEST_ETO_G_NONZERO_EXPECTED  (2.535)    /* мм/сут                  */
 
 /* TC49: штиль */
@@ -264,7 +270,7 @@ double etc_mm_day = 0.0;
 #define TEST_ETO_CALM_EXPECTED       (2.115)    /* мм/сут                  */
 
 /* TC50: отрицательный Rn -> клэмп */
-#define TEST_ETO_RN_NEGATIVE         (-5.0)     /* МДж м⁻² сут⁻¹           */
+#define TEST_ETO_RN_NEGATIVE         (-5.0)     /* МДж м-2 сут-1           */
 #define TEST_ETO_NEGATIVE_EXPECTED   (0.0)      /* мм/сут, клэмп к 0       */
 
 /* TC52: ETc */
@@ -443,5 +449,3 @@ RUN_TEST(test_Calc_ETc_Errors);
 В следующем девлоге кратко подведем итоги текущего этапа разработки, обозначим состояние текущей v0.1.0 и сравним ее с требованиями, опишем основные параметры системы (подробное описание будет хранится в разделе документации), определим следующие шаги.
 
 Следующий этап работы будет связан с портированием программы на МК и всей необходимой для встраиваемого программного обеспечения настройке. Этой работе будет посвящена отдельная серия девлогов. Прежде чем переходить к работе над следующей, встраиваемой, версией, сделаем небольшой смоук-тест с портированием нашей программы на МК - чтобы получить вывод в терминал (через *UART*) и сразу посмотреть, все ли в порядке с потенциалом портирования.
-
-* * *

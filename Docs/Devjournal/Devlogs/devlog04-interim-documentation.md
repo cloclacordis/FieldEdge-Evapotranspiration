@@ -1,5 +1,9 @@
 # devlog04. Промежуточная документация
 
+*A pause-and-document entry, no new code. Snapshots the file structure, adds four Mermaid diagrams (context, layering, data-flow, state chart) reflecting the architecture as of devlog03, and writes out formal module contracts (function signatures, status meanings, invariants) for validation, measurement, and the two calculation modules built so far. Lays down conventions for future modules: the `initialized`-flag rule, `Calc_` naming for public calculation functions, one-directional layer dependencies, and FAO-56 reference checking via `main-test.c` before integration. Closes by previewing the next big block: net radiation and its four sub-terms (Ra, Rs, Rnl, Rns), plus the project’s plan to substitute a cheap illuminance sensor + astronomical model for an expensive pyranometer.*
+
+* * *
+
 ## Зачем этот девлог
 
 После трех шагов разработки - постановки задачи, первых модулей и их улучшения - у нас есть "ходячий скелет" с проверенными вычислениями. Прежде чем двигаться по методу аккреции к радиационному блоку, имеет смысл **зафиксировать архитектуру** в том виде, в котором она сейчас существует и планируется: не как финальную документацию, а как рабочую карту, на которую можно опираться при разработке следующих модулей.
@@ -357,5 +361,3 @@ STATUS_INVALID_VALUE: Tdata->initialized == false
 - берем накопленное значение `n`;
 - считаем **R<sub>a</sub>**;
 - считаем **R<sub>s</sub> = (0.25 + 0.5 * n/N) * R<sub>a</sub>**.
-
-* * *

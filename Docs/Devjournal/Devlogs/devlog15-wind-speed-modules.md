@@ -1,5 +1,9 @@
 # devlog15. Разработка модулей скорости ветра
 
+*Adds wind-speed read and calculation modules, implementing the FAO-56 logarithmic wind profile correction (eq. 47) that converts an anemometer reading at any height to the standard 2 m reference height (u2), needed for both the aerodynamic term and the denominator of the Penman–Monteith equation. Discusses the difference between WMO-standard (10 m) and FAO-standard (2 m) anemometer placement, and why the conversion matters when reusing an existing weather station’s equipment. The calculation module accumulates daily min/max/mean wind speed and enforces that the measurement height stays constant between updates within a day (a height change mid-day signals a configuration error). Six new tests (41–46) verify against FAO-56 example 14 and cover null-pointer, invalid-value, and height-mismatch cases.*
+
+* * *
+
 ## Постановка задач и введение
 
 В этом девлоге и на этом шаге мы хотим разработать **два модуля**:
@@ -247,7 +251,7 @@ Status WindSpeed_Update(WindSpeedData *data, const double speed_m_s, const doubl
 
     if (data->initialized) {
         /* Начиная со второго вызова высота анемометра постоянна */
-        double diff = height_m - data->height_m;
+        const double diff = height_m - data->height_m;
         if ((diff > WIND_HEIGHT_TOL_M) || (diff < -WIND_HEIGHT_TOL_M)) {
             return STATUS_INVALID_VALUE;
         }
@@ -576,5 +580,3 @@ RUN_TEST(test_WindSpeed_Update_HeightMismatch);
 #### Запустим `fao56_test`
 
 ![](resources/1504-main-test-output.png)
-
-* * *

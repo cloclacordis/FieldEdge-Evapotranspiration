@@ -1,5 +1,9 @@
 # devlog18. Анализ и улучшение *v0.1.0*
 
+*Hardening pass. Enables stricter compiler warnings (`-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`, plus `C_EXTENSIONS OFF` for the MCU-bound `fao56_app` target) and works through the two `-Wfloat-equal` warnings that surface, correctly distinguishing a genuinely dead/redundant equality check (fixed via an epsilon tolerance) from a physically meaningful “exactly zero” check (fixed by relying on an already-established `< 0` rejection). Adds missing `isfinite()`/`NaN` input validation to `Calc_ETo()`, `Calc_ETc()`, and `AirHumidity_Update()` (the last via a new shared `ValidHumidityPercent()` validator), with regression tests for each. Splits `main.c` into a pure `daily-cycle.c/.h` computation module (returning a `DailyResults` struct, and reporting which step failed via an `out_failed_step` parameter) and a slim `main.c` that only calls it and prints the report. Consolidates repeated math constants and clamp patterns into a shared `math-utils.h`. Runs `cppcheck` static analysis (general + MISRA), re-verifies the full pipeline against FAO-56 worked examples, and closes two smaller gaps found on a final pass: a stray diagnostic `printf()` removed from inside the otherwise print-free `daily-cycle.c`, and a missing `log_arg > 0` guard added before `log()` in `Calc_WindSpeedAt2m()`. Ends the v0.1.0 development cycle at 58 tests.*
+
+* * *
+
 ## Введение
 
 Спустя время удалось выявить ряд проблем в текущей версии проекта. Представляется адекватным провести необходимые изменения прежде, чем переходить к *smoke*-тесту и портированию.
@@ -1545,6 +1549,104 @@ jobs:
 
 * * *
 
+## *UPD:* сделаем проверки еще строже
+
+В файл `CMakeLists.txt` мы добавили еще один флаг сборки `-Wpedantic` **для обеих целей**, а также дополнительно попросили компилятор строго следовать стандарту *C11*:
+
+```CMake
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+```
+
+> После введенных изменений была проведена сборка и запуск обеих целей - успешно, без предупреждений и проблем.
+
+Решено было для цели `fao56_app` - поскольку она, в отличие от второй цели `fao56_test`, которая запускается только на ПК, будет портирована на микроконтроллер на этапе *v0.2.0* - добавить запрет на использование расширений стандарта *C11*. Вторая цель как раз использует подобное расширение в блоке, где реализуется функция времени/задержки - в начале файла тестирования (функция `usleep` и тип `useconds_t` не входят в официальный стандарт *ISO C11*, а являются расширениями). Введение требования `set(CMAKE_C_EXTENSIONS OFF)` глобально, для *всего* проекта, остановило бы сборку `fao56_test` на уровне `main-test.c`. Мы введем запрет на использование расширений *только* для цели `fao56_app`:
+
+```CMake
+target_link_libraries(fao56_app m)
+target_compile_options(fao56_app PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
+set_target_properties(fao56_app PROPERTIES C_EXTENSIONS OFF)
+```
+
+> После введенных изменений была проведена сборка и запуск обеих целей, а также проверка статическим анализатором `cppcheck` - успешно, без предупреждений и проблем.
+
+* * *
+
+### И еще, и еще...
+
+Во-первых, посмотрим на файл `daily-cycle.c`, функцию `RunDailyCycle()`, блок/слой измерений, функцию в теле цикла `for` (обработка данных освещенности):
+
+```C
+for (uint32_t i = 0U; i < 12U; ++i) {
+
+	...
+	
+	status = SunshineLux_Update(&out->sunshine_data, out->lux_sample.lux, out->lux_sample.source);
+	if (status != STATUS_OK) {
+		*out_failed_step = "SunshineLux_Update";
+		return status;
+	}
+	
+	(void)printf("lux[%02u] = %.0f, source = %s\n",
+				(unsigned)i, out->lux_sample.lux, SensorValueSource_ToString(out->lux_sample.source));
+}
+```
+
+Как видно, мы оставили `printf()` в `RunDailyCycle()`, хотя намеревались освободить вычислительную функцию от функций вывода, чтобы сделать ее портируемой и "архитектурно чистой". Оставим этот вывод в качестве *debug*-трассировки. Для *smoke*-теста на МК он может быть полезен - можно будет увидеть последовательность из 12 входных значений освещенности и их источник. При портировании на этапе *v0.2.0* мы несколько изменим механизм трассировки, не затрагивая вычислительную логику.
+
+* * *
+
+Во-вторых, мы упустили важные проверки в модуле **вычисления скорости ветра**. Откроем файл `wind-speed-calc.c` и перейдем в функцию `Calc_WindSpeedAt2m()` - увидим:
+
+```C
+Status Calc_WindSpeedAt2m(const double u_z, const double z, double *out_u2) {
+    if (out_u2 == NULL) {
+        return STATUS_NULL_POINTER;
+    }
+
+    if (!IsValidSpeed(u_z) || !IsValidHeight(z)) {
+        return STATUS_INVALID_VALUE;
+    }
+
+    double log_arg = C_EQ47_MULT * z - C_EQ47_SUB;
+    *out_u2 = u_z * (C_EQ47_NUM / log(log_arg)); /* Eq. 47 */
+
+    return STATUS_OK;
+}
+```
+
+Должно быть:
+
+```C
+Status Calc_WindSpeedAt2m(const double u_z, const double z, double *out_u2) {
+    if (out_u2 == NULL) {
+        return STATUS_NULL_POINTER;
+    }
+
+    if (!IsValidSpeed(u_z) || !IsValidHeight(z)) {
+        return STATUS_INVALID_VALUE;
+    }
+	
+	const double log_arg = C_EQ47_MULT * z - C_EQ47_SUB;
+    if (log_arg <= 0.0) {
+        return STATUS_INVALID_VALUE;
+    }
+
+    const double u2 = u_z * (C_EQ47_NUM / log(log_arg)); /* Eq. 47 */
+    if (!isfinite(u2)) {
+        return STATUS_INVALID_VALUE;
+    }
+
+    *out_u2 = u2;
+
+    return STATUS_OK;
+}
+```
+
+> После внесенных изменений тесты, сборка, анализатор, программа были запущены - итоговое состояние кода *v0.1.0* проверено перед публикацией, программа работает корректно, все ранее описанные проверки и результаты остаются в силе.
+
+* * *
+
 ## Что остается и следующие шаги
 
 На этом будем считать первую версию *v0.1.0* программы (вычислительного ядра) в некотором роде завершенной и проверенной. Конечно, для портирования - и даже для первого *smoke*-теста на МК - потребуется ряд изменений и добавлений. К примеру, возникнет **вопрос** с использованием стандартных **библиотек** и вызовов функций. Однако компромисс между удобством при разработке математического ядра системы и строгими требованиями конечной эксплуатации встраиваемого программного обеспечения был выбран сознательно: было бы затруднительно разрабатывать и тестировать ядро программы, используя сразу же все возможные ограничения, принятые для встраиваемых программ.
@@ -1556,5 +1658,3 @@ jobs:
 Еще один вопрос связан с калибровкой порога освещенности. Сейчас в файле конфигурации развертки `deployment-config.h` выставлен произвольно высокий порог *20000.0 lux*. Существует возможность сделать пересчет на основе документов ВМО из *Вт/м<sup>2</sup>* в *лм/Вт* и в люксы и/или провести эмпирическую калибровку целевого датчика. К этому вопросу разумно вернуться на этапе разработки драйверов для сенсорных устройств.
 
 **Следующие шаги** будут состоять в подготовке актуальной **документации** вычислительного ядра и программы - к проведению **смоук-теста** и **портированию** на МК.
-
-* * *

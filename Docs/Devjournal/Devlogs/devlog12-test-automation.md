@@ -1,5 +1,9 @@
 # devlog12. Автоматизация тестирования
 
+*Migrates the test suite from a hand-rolled `#define TEST_CASE N` / manual-recompile scheme to the Unity C testing framework, fetched via CMake’s `FetchContent`. Rewrites all 28 existing test cases as individual `test_()` functions run through `RUN_TEST()`, eliminating the `goto done` pattern and the manual `failures` counter in favor of Unity’s built-in assertion and reporting machinery. Also restructures `CMakeLists.txt` into two clean build targets (production `fao56_app` and test `fao56_test`) runnable independently from the IDE, and reorganizes `test-config.h` with clearer section headers.*
+
+* * *
+
 ## Постановка задач
 
 На этом шаге и в этом девлоге мы хотим решить две задачи, прежде чем двигаться дальше в разработке уравнения и завершении блока радиации:
@@ -989,6 +993,8 @@ int main(void) {
 }
 ```
 
+> *UPD:* `clock()` измеряет время работы процессора, а не реальное время, - выводимое значение `elapsed_ms` может занижать реальную задержку.
+
 * * *
 
 ## Запустим тестовую проверку
@@ -1000,5 +1006,3 @@ int main(void) {
 ## Дальнейшие действия
 
 Перейдем наконец к завершающим вычислениям блока радиации.
-
-* * *

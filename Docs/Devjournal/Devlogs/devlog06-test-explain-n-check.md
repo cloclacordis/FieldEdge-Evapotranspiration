@@ -1,5 +1,9 @@
 # devlog06. Пояснение к тестам, проверки, `goto` note
 
+*An explanatory entry (no new features) walking through why each of the 16 manual test cases from devlog05 exists and what class of bug it guards against — separating “does the math match FAO-56” tests from “does the defensive layer correctly reject bad input” tests. Includes a reasoned justification for the two uses of `goto done` in the test harness, citing MISRA C:2012 rules 15.1–15.3 and explaining why the two required rules are satisfied while the one advisory rule is knowingly violated.*
+
+* * *
+
 ## Введение и общая идея
 
 Здесь дается разбор файла `main-test.c` из предыдущего девлога.
@@ -400,5 +404,3 @@ done:
 ![](resources/0617-main-test-case-14.png)  
 ![](resources/0618-main-test-case-15.png)  
 ![](resources/0619-main-test-case-16.png)
-
-* * *

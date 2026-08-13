@@ -1,5 +1,9 @@
 # devlog03. Улучшение первых модулей
 
+*Hardening pass on the skeleton before tackling the harder radiation block. Introduces a shared validation layer: a `Status` enum for explicit error signaling, `isfinite()`-based range checks, and explicit `initialized` flags instead of relying on `0.0` as an implicit “not set” marker. Adds a manual test harness (`main-test.c` with `#define TEST_CASE`) and walks through seven categories of checks (NaN, Infinity, NULL pointers, min/max update logic, etc.), each with expected FAO-56-derived output. Establishes the layering that persists through the whole project: Sensor Read -> Validation -> State Update -> Calculation -> Output.*
+
+* * *
+
 ## Зачем сразу улучшать и что именно?
 
 На предыдущем шаге была получена первая рабочая вертикаль вычислений: от имитации мгновенного измерения температуры воздуха через слой вычисляемой (минимальной, максимальной, средней) температуры воздуха к вычислению давления насыщенного пара и наклона кривой давления насыщенного пара ("дельты"). Такая логика декомпозиции уравнения Пенмана–Монтейта позволяет получить компилируемый и проверяемый "ходячий скелет" программы, который можно расширять по мере продвижения к следующим членам уравнения (следуя методу "аккреции", или инкрементной разработки).
@@ -917,5 +921,3 @@ int main(void) {
 Следующий шаг будет заключаться в разработке радиационного блока в той же логике: от физического процесса к вычислительному модулю, с сохранением потоков данных, единых проверок и возможности пошаговой проверки результата.
 
 Радиационный блок уравнения будет сложнее не только по математике, но и по числу зависимостей и промежуточных вычислений. Поэтому прежде чем переходить к нему, необходимо было получить более строгую форму первых модулей (для дальнейшей аккреции).
-
-* * *

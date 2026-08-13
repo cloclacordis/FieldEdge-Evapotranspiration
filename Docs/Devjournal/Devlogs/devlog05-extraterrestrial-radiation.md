@@ -1,5 +1,9 @@
 # devlog05. Модуль внеземной радиации
 
+*First module of the radiation block: extraterrestrial radiation, Ra (FAO-56 eq. 21). Adds a geolocation module (DMS-to-decimal-degree conversion, latitude in radians), a day-of-year/astronomy module (inverse Earth–Sun distance, solar declination, sunset hour angle, day length — eq. 23–25, 34), and the Ra calculation itself, including correct handling of polar day/night edge cases via clamped arccos arguments. Also adds a mock illuminance (“sunshine lux”) sensor module for later use in computing actual sunshine duration. Sixteen manual test scenarios verify astronomical derivatives and Ra against FAO-56 worked examples 7–9 (Bangkok and Rio de Janeiro latitude conversions; Ra at 20°S, J = 246; polar night at 80°N).*
+
+* * *
+
 ## Введение
 
 Как было показано в предыдущем девлоге, вычисление следующего члена уравнения Пенмана-Монтейта, а именно члена **чистой радиации**, *net radiation*, **R<sub>n</sub>**, предполагает разработку целого блока солнечной радиации. Проанализировав деривативы этого члена уравнения, мы пришли к выводу, что начать разработку блока радиации следует с написания модуля **внеземной радиации**, *extraterrestrial radiation*, **R<sub>a</sub>**. Разработке этого модуля и будет посвящен данный девлог.
@@ -452,7 +456,7 @@ Status Calc_Ra(RaData* out, const DayData* day, const LocationData* loc);
 
 #define SOLAR_CONSTANT_GSC  (0.0820)  /* Солнечная постоянная G_sc [МДж м2 мин]  */
 #define PI                  (3.14159265358979323846)  /* Для переносимости       */
-#define RA_COEFFICIENT      (1440.0)  /* (24 × 60) / π × Gsc = 1440 / π × 0.0820 */
+#define RA_COEFFICIENT      (1440.0)  /* 24 * 60 = 1440 -> для: (24 * 60) / π * Gsc = 1440 / π * 0.0820 */
 
 /* Инициализация данных Ra */
 void RaCalc_Init(RaData* data) {
@@ -477,11 +481,11 @@ Status Calc_Ra(RaData* out, const DayData* day, const LocationData* loc) {
     const double dr      = day->dr;
 
     /* Расчет Ra по FAO56 eq. 21:
-       R_a = (24 × 60 / π) × G_sc × dr ×
-            [ω_s × sin(φ) × sin(δ) + cos(φ) × cos(δ) × sin(ω_s)]
+       R_a = (24 * 60 / π) * G_sc * dr *
+            [ω_s * sin(φ) * sin(δ) + cos(φ) * cos(δ) * sin(ω_s)]
 
-       term_a = ω_s × sin(φ) × sin(δ)   - вклад ночи/дня склонения
-       term_b = cos(φ) × cos(δ) × sin(ω_s) - вклад угла заката */
+       term_a = ω_s * sin(φ) * sin(δ)   - вклад ночи/дня склонения
+       term_b = cos(φ) * cos(δ) * sin(ω_s) - вклад угла заката */
 
     const double coeff  = (RA_COEFFICIENT / PI) * SOLAR_CONSTANT_GSC * dr;
     const double term_a = omega_s * sin(phi) * sin(delta);
@@ -642,7 +646,7 @@ int main(void) {
     (void)printf("Количество часов дневного света (N) = %.2f h\n", day_data.N_hours);
 
     (void)printf("\n=== Внеземная радиация ===\n");
-    (void)printf("Внеземная радиация для дневного периода (Ra) = %.2f MJ m2 day1\n", ra_data.Ra_daily);
+    (void)printf("Внеземная радиация для дневного периода (Ra) = %.2f MJ m-2 day-1\n", ra_data.Ra_daily);
 
     (void)printf("Эквивалентное испарение = %.2f мм/сут\n", ra_data.Ra_daily * 0.408);  /* По eq. 20 */
 
@@ -653,7 +657,7 @@ int main(void) {
 }
 ```
 
-> ![](resources/053-day-in-year-1.png)
+> ![](resources/053-day-in-year-1.png)  
 > ![](resources/054-day-in-year-2.png)
 
 * * *
@@ -1053,5 +1057,3 @@ done:
     return (failures == 0) ? 0 : 1;
 }
 ```
-
-* * *

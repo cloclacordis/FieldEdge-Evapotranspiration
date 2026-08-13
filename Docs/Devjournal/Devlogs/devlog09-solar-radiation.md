@@ -1,12 +1,16 @@
 # devlog09. Модуль вычисления солнечной радиации
 
+*Implements the Angström–Prescott solar radiation formula, Rs (FAO-56 eq. 35) and the clear-sky radiation formula, Rso (eq. 37), including elevation-dependent clear-sky coefficient, n/N clamping to [0,1], and polar-night zero handling. Along the way, upgrades `Location_DMS_to_decimal()` from a bare `double`-returning function to a `Status`-based contract with explicit minute-range validation (0 ≤ minutes < 60), for consistency with the rest of the codebase. Adds eight new test cases (17–24) covering the sunshine accumulator in isolation (full sun, no sun, mixed day), the FAO-56 ex. 10 reference case (Rio de Janeiro), n > N clamping, invalid Angström coefficients, and uninitialized-input rejection.*
+
+* * *
+
 ### Напоминание о текущих задачах
 
 Вкратце напомним задачи, стоящие перед нами на ближайшие пару шагов:
 
 - написать модуль вычисления солнечной радиации *R<sub>s</sub>*,
 - обновить оркестрацию и тестовые наборы,
-- разрешить дилеммы "default J" (и снова обновить оркестрацию).
+- разрешить дилемму "default J" (и снова обновить оркестрацию).
 
 В этом девлоге мы будем решать первые две задачи: создание модуля *R<sub>s</sub>* и обновление файлов оркестрации и тестирования.
 
@@ -857,5 +861,3 @@ Status Location_Init(LocationData* loc) {
 - обратимся к разрешению дилеммы "default J",
 - обновим оркестрацию и тестовые наборы,
 - перейдем к завершающим вычислениям всего блока радиации.
-
-* * *
