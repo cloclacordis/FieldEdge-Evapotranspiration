@@ -5,7 +5,8 @@
 #include "daily-cycle.h"
 #include "../03-validation/033-status/status.h"
 
-static int PrintStatusAndReturn(const char *failed_step, const Status status) {
+static int PrintStatusAndReturn(const DailyResults *results, const char *failed_step, const Status status) {
+    PrintTrace(&results->trace); /* Print diagnostics captured before the failure, if any */
     (void)fprintf(stderr, "Daily cycle failed at %s: %s\n", failed_step, Status_ToString(status));
     return 1;
 }
@@ -16,7 +17,7 @@ int main(void) {
     const Status status = RunDailyCycle(&results, &failed_step);
 
     if (status != STATUS_OK) {
-        return PrintStatusAndReturn(failed_step, status);
+        return PrintStatusAndReturn(&results, failed_step, status);
     }
 
     PrintReport(&results);

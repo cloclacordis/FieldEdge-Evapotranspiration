@@ -33,6 +33,28 @@ extern "C" {
 
 #include "../04-calculation/046-wind-speed-calc/wind-speed-calc.h"
 
+/* Number of illuminance samples used by the PC mock per RunDailyCycle();
+ * independent of CONFIG_SAMPLE_PERIOD_SEC; replaced by real periodic
+ * sampling when the MCU implementation is integrated */
+#define DAILY_CYCLE_MOCK_LUX_SAMPLE_COUNT 12U
+
+/*  Illuminance reading and its acquisition status, stored for later diagnostics */
+typedef struct {
+    SunshineLuxSample sample;         /* Value + source finally used ** *** **** */
+    Status            read_status;    /* SensorLux_ReadInstant() result **** *** */
+} LuxSampleTrace;
+
+/* Acquisition diagnostics captured by RunDailyCycle() for later reporting */
+typedef struct {
+    Status         temperature_read_status;  /* SensorTemperature_ReadInstant() result */
+    Status         humidity_read_status;     /* SensorHumidity_ReadInstant() result ** */
+    Status         pressure_read_status;     /* SensorPressure_ReadInstant() result ** */
+    Status         pressure_model_status;    /* Calc_PressureFromElevation() result ** */
+    Status         wind_read_status;         /* SensorWindSpeed_ReadInstant() result * */
+    LuxSampleTrace lux_samples[DAILY_CYCLE_MOCK_LUX_SAMPLE_COUNT];
+    uint32_t       lux_sample_count;         /* Number of valid lux_samples entries ** */
+} DailyCycleTrace;
+
 typedef struct {
     TemperatureSample   t_sample;
     AirTemperatureData  temperature_data;
@@ -51,6 +73,7 @@ typedef struct {
     AngstromValues      angstrom;
     SolarRadiationData  solar_radiation;
     NetRadiationData    net_radiation;
+    DailyCycleTrace     trace;
     uint16_t            current_j;
     double              e_tmean;
     double              e_s;
@@ -62,12 +85,16 @@ typedef struct {
     double              etc_mm_day;
 } DailyResults;
 
-/* Daily measurement and calculation cycle; prints an error and returns
- * a non-zero status upon the first failure; writes "OK" to *out_failed_step
- * on success; upon the first failure, indicates the step where the failure occurred */
+/* Runs the daily measurement and calculation cycle without I/O;
+ * recoverable sensor failures use defaults and are recorded in trace;
+ * on failure, returns the status and stores the failed step in
+ * out_failed_step; on success, returns STATUS_OK and stores "OK" */
 Status RunDailyCycle(DailyResults *out, const char **out_failed_step);
 
-/* Prints the result of a successful execution */
+/* Prints acquisition diagnostics stored in trace; performs stdio I/O */
+void PrintTrace(const DailyCycleTrace *trace);
+
+/* Prints the full report for a successful RunDailyCycle() run */
 void PrintReport(const DailyResults *results);
 
 #ifdef __cplusplus
