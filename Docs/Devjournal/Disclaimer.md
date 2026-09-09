@@ -8,4 +8,4 @@ The main purpose of the devlogs is — though in a rough form — to preserve th
 
 It is for this purpose that the devlog genre was used, and for the same reason it has a rough, rather than “polished,” form: in the end, it is a trace of process states, not product documentation.
 
-See `Docs/Devjournal/Index.md` for the devlog table of contents and English synopses.
+See [`index`](Index.md) for the devlog table of contents and English synopses.

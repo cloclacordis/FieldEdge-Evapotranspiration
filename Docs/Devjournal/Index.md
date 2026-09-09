@@ -20,6 +20,7 @@
 | 16 | The Penman–Monteith Equation | Assembles all derivatives into ETo/ETc (eq. 6, 56). |
 | 17 | Summarizing v0.1.0 | Status snapshot: 53 tests, coverage table, roadmap to MCU port. |
 | 18 | Improvements to v0.1.0 | Hardening: compiler warnings, `NaN` checks, `main.c`/`daily-cycle.c` split, 58 tests, `cppcheck`. |
+| 19 | New Checks & Documentation | Adds Valgrind and sanitizer checks, dedicated CI job, and v0.1.0 architecture documentation. |
 
 * * *
 
