@@ -7,6 +7,8 @@ project(FAO56 C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+
 ### ## # Source code files used for both targets # ## ###
 set(FAO56_SOURCES
         01-measurement/011-air-temperature-read/air-temperature-read.c
@@ -113,6 +115,18 @@ add_executable(fao56_test
 target_link_libraries(fao56_test m unity)
 target_compile_definitions(unity PUBLIC UNITY_INCLUDE_DOUBLE)
 target_compile_options(fao56_test PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
+
+if(ENABLE_SANITIZERS)
+    target_compile_options(fao56_test PRIVATE
+            -fsanitize=address,undefined
+            -fno-omit-frame-pointer
+            -g
+    )
+
+    target_link_options(fao56_test PRIVATE
+            -fsanitize=address,undefined
+    )
+endif()
 
 # CTest
 enable_testing()

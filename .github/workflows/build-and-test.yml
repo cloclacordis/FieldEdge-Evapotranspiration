@@ -1,5 +1,4 @@
 name: Build and Test
-
 on: [push, pull_request]
 
 jobs:
@@ -18,3 +17,19 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  sanitizer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: cmake -S Code -B build-sanitizers -DENABLE_SANITIZERS=ON
+
+      - name: Build
+        run: cmake --build build-sanitizers
+
+      - name: Test
+        run: ctest --test-dir build-sanitizers --output-on-failure
