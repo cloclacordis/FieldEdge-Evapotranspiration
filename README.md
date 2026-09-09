@@ -1,88 +1,95 @@
 # FieldEdge-Evapotranspiration
 
-FieldEdge-Evapotranspiration is a portable C11 implementation of the FAO-56 [Penman–Monteith](https://en.wikipedia.org/wiki/Penman%E2%80%93Monteith_equation) reference evapotranspiration equation (Allen et al., [1998](https://www.fao.org/4/x0490e/x0490e00.htm); [2025](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)), built as a layered computational pipeline in which sensor reading, validation, calculation, and orchestration are isolated behind explicit interfaces.
+## About
 
-The current release, **v0.1.0**, executes that full pipeline on a PC against mock/emulated sensor data, with every calculation checked line-by-line against FAO-56’s own worked examples.
+**FieldEdge-Evapotranspiration** is open-source software for calculating reference evapotranspiration (ETo) according to the FAO-56 Penman–Monteith methodology, designed for integration into irrigation control and decision-support systems. It comprises a hardware-agnostic C11 computation kernel and an STM32-based embedded implementation. The software aims to provide practical, accessible tools for local communities and small-scale agricultural users and is available for local deployment without reliance on proprietary platforms or centralized services.
 
-The target is a self-contained field node — a microcontroller reading its own temperature, humidity, wind, pressure, and illuminance sensors and computing daily reference and crop evapotranspiration locally, with no cloud service, no stable network connection, and no proprietary platform. It is intended as open-source, non-commercial infrastructure — something small-scale agricultural users and local communities can run and modify themselves, not a product they depend on someone else to keep online.
+**Computation kernel (v0.1.x)** — a C11 implementation of the ETo calculation pipeline. It is complete, tested, and runs on a PC using emulated sensor data. The computation kernel is designed to be reusable independently of the target hardware.
 
-* * *
-
-## Architecture (in outlines)
-
-The project uses layers with strictly unidirectional dependencies.
-
-* `Code/01-measurement`: sensor reading (emulated on PC, drivers on MCU).  
-* `Code/02-providers`: date/time, deployment configuration.  
-* `Code/03-validation`: status codes, value ranges, data source tracking, shared math constants/utils.  
-* `Code/04-calculation`: computation modules (model constants, measured and computed data).  
-* `Code/05-orchestration`: `daily-cycle.c` runs the measurement-and-calculation pipeline; `main.c` is a thin entry point that calls it and reports the result, including which step failed if the cycle doesn’t complete.  
-* `Code/06-test`: Unity test suite, reference values from FAO-56 worked examples.
-
-The calculation layer is a pure computation kernel: it has no knowledge of sensors, time, or fallback logic — it receives validated inputs and returns results; the connection happens only in the orchestration layer.
-
-Deployment parameters (anemometer height, geographic coordinates, elevation, crop coefficient *Kc*, sensor thresholds) live in `Code/02-providers/022-configurations/deployment-config.h`. Model constants (λ, Stefan-Boltzmann σ, etc.) are defined locally inside each computation module in `Code/04-calculation/.../*-calc.c`; portable math constants shared across files (π, degree/radian conversion) live in `Code/03-validation/034-math-utils/math-utils.h`.
-
-All public functions return a `Status` value. Results are written to out-parameters. NULL is checked first in every function. Every numeric input is checked for `NaN`/`Infinity` before any arithmetic operation.
-
-Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `initialized` flag that is `false` after `_Init()` and `true` after the first valid `_Update()`. Single-call result structs (`AtmosphericData`, `NetRadiationData`) are ready immediately after `_Init()`.
-
-> More detailed architecture documentation (diagrams, function-level contracts) is planned for after this release.
+**Embedded implementation (v0.2.x under development)** will integrate the computation kernel into an STM32-based embedded system with real sensors, LoRa wireless communication, and real-time operation.
 
 * * *
 
-## Code quality and verification
+## System context
 
-Beyond the FAO-56 reference tests below, the codebase underwent a deliberate hardening pass before this release:
+The system operates at the edge, acquiring agrometeorological data from sensors, processing and validating the measurements, and calculating ETo. The resulting ETo value is provided to an external irrigation system for local management. Version v0.1.x implements the measurement and computation pipeline on a PC using emulated sensor data. Version v0.2.x is an STM32 implementation under development.
 
-* Both build targets compile with the following compiler flags: `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
-* The C11 standard compliance is strictly enforced, extensions are disabled (for the `fao56_app` target — the code intended for MCU deployment): `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
-* The codebase was checked with the `cppcheck` static analyzer.  
-* Every numeric input to the calculation layer is validated for range and for `NaN`/`Infinity` before use.  
-* CI (GitHub Actions) builds both targets and runs the full test suite on every push and pull request.
+See [System context diagram](Docs/system-context.md).
 
 * * *
 
-## Test results
+## Architecture
+
+The software uses layers with strictly unidirectional dependencies.
+
+* [`Code/01-measurement`](Code/01-measurement): sensor reading (emulated on PC in v0.1.x).  
+* [`Code/02-providers`](Code/02-providers): date/time and deployment configuration (system time is used on PC in v0.1.x).  
+* [`Code/03-validation`](Code/03-validation): status codes, value ranges, data source tracking, and shared mathematical constants/utilities.  
+* [`Code/04-calculation`](Code/04-calculation): computation modules (model constants, measured data, and computed data).  
+* [`Code/05-orchestration`](Code/05-orchestration): [`daily-cycle.c`](Code/05-orchestration/daily-cycle.c) runs the measurement-and-calculation pipeline; [`main.c`](Code/05-orchestration/main.c) calls it and reports the result, including which step failed if the cycle does not complete.  
+* [`Code/06-test`](Code/06-test): Unity test suite with [reference values](Code/06-test/test-config.h) from FAO-56 worked examples (for PC v0.1.x).
+
+The calculation layer is a pure computation kernel. The computation kernel has no knowledge of sensors: it receives validated inputs and returns results. Integration with sensors occurs only in the orchestration layer, specifically in the daily cycle routine (in v0.1.x, sensor readings are provided by PC-based emulation).
+
+Deployment parameters (anemometer height, geographic coordinates, elevation, crop coefficient Kc, and sensor thresholds) are defined in [`Code/02-providers/022-configurations/deployment-config.h`](Code/02-providers/022-configurations/deployment-config.h). Model constants (λ, Stefan–Boltzmann σ, etc.) are defined locally within each computation module in [`Code/04-calculation/.../*-calc.c`](Code/04-calculation). Shared mathematical constants used across files (π, degree/radian conversion) are defined in [`Code/03-validation/034-math-utils/math-utils.h`](Code/03-validation/034-math-utils/math-utils.h).
+
+All public functions return a [`Status`](Code/03-validation/033-status) value. Results are written to out-parameters. Pointer arguments are checked for `NULL` first in every function. Numeric inputs are checked for `NaN` and infinite values before any arithmetic operation.
+
+Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `initialized` flag that is `false` after `_Init()` and `true` after the first valid `_Update()`. Single-call result structs (`AtmosphericData`, `NetRadiationData`) are immediately usable after `_Init()`.
+
+* * *
+
+## Testing and verification
 
 ```
 58 Tests  0 Failures  0 Ignored
 OK
 ```
 
-All test cases are verified against worked examples from FAO-56 (1998).  
-Reference values and tolerances are documented in `Code/06-test/test-config.h`.
+All test cases are verified against worked examples from FAO-56 ([1998](https://www.fao.org/4/x0490e/x0490e00.htm), see also [2025](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)).  
+Reference values and tolerances are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
 
 * * *
 
-## Limitations and open questions of v0.1.0
+## Code quality
 
-* Sensors are mock constants; no real hardware is involved yet.  
-* `time()` from `<time.h>` is used for the current day of year and lux timestamps; on a bare MCU, this requires RTC integration.  
-* State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.0).  
+Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening pass before this release.
+
+* Both build targets compile with the following compiler flags: `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
+* C11 standard compliance is strictly enforced, with extensions disabled for the MCU-bound `fao56_app` target: `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
+* The codebase was [checked](Docs/Devjournal/Devlogs/devlog18-review-and-improvements-v010.md) with the `cppcheck` static analyzer.  
+* The PC test binary was [checked](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) with Valgrind, AddressSanitizer, and UndefinedBehaviorSanitizer to detect memory errors, leaks, and undefined behavior.  
+* Numeric inputs to the calculation layer are validated for `NaN` and infinite values and, where applicable, against valid ranges before use.  
+* CI (GitHub Actions) builds both targets, runs the full test suite, and runs the test suite with AddressSanitizer and UndefinedBehaviorSanitizer on every `push` and `pull request`.
+
+* * *
+
+## Limitations and open questions of v0.1.x
+
+* Sensor data is currently emulated using fixed constants; no real hardware is involved yet.  
+* `time()` from `<time.h>` is used for the current day of year and illuminance measurement timestamps; on an MCU, this requires RTC integration.  
+* State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
-* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
+* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
 * The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.
 
 * * *
 
-## Status and roadmap
+## Documentation (in progress)
 
-* **v0.1.0 (current)** — the full computational core, validated on PC against FAO-56 worked examples, 58 passing tests, hardened through a comprehensive review (compiler warnings, static analysis, `NaN`/range checks on every input).  
-* **v0.2.0 (next)** — port to STM32: real sensor drivers, an RTC-backed time source, and a periodic sampling model.  
-* **v0.3.0** — LoRaWAN telemetry and field deployment.
+* [System context diagram](Docs/system-context.md).
 
 * * *
 
 ## Development journal
 
-Step-by-step development notes (in Russian) are in `Docs/Devjournal/Devlogs/`.  
-See `Docs/Devjournal/Disclaimer.md` for context on the format and purpose of those notes.  
-See `Docs/Devjournal/Index.md` for the devlog table of contents and English synopses.
+Step-by-step development notes (in Russian) are in [`Docs/Devjournal/Devlogs`](Docs/Devjournal/Devlogs).  
+See [`Docs/Devjournal/Disclaimer.md`](Docs/Devjournal/Disclaimer.md) for context on the format and purpose of those notes.  
+See [`Docs/Devjournal/Index.md`](Docs/Devjournal/Index.md) for the devlog table of contents and English synopses.
 
 * * *
 
 ## License
 
 This project is licensed under the [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0).  
-See LICENSE file for details.
+See the `LICENSE` file for details.
