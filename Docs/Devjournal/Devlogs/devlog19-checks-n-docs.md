@@ -11,13 +11,29 @@
 Запустим проверку `fao56_test`:
 
 ```bash
-valgrind --leak-check=full --error-exitcode=1 ./fao56_test
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 ./fao56_test
 ```
 
 ![](resources/1900-valgrind-output-1.png)  
 ![](resources/1901-valgrind-output-2.png)
 
 Проверка завершилась без обнаружения ошибок управления памятью.
+
+**Valgrind** показал `9 allocs, 9 frees`. В файлах нашего исходного кода динамическое выделение памяти не применяется. Дополнительная проверка через **GDB** показала, что наблюдаемое выделение памяти происходит внутри `libc` при работе с локальным временем, а не непосредственно в коде приложения. `DateProvider_Read()` вызывает **API** работы со временем на ПК, после чего системная библиотека при обработке часового пояса (`/etc/localtime`) выполняет внутренний `malloc()`.
+
+Цепочка вызовов имеет следующий вид:
+
+```
+__GI___libc_malloc(15)                   [malloc/malloc.c:3294]
+    <- __GI___strdup("/etc/localtime")   [string/strdup.c:42]
+    <- tzset_internal()                  [time/tzset.c:402]
+    <- __tz_convert()                    [time/tzset.c:577]
+    <- DateProvider_Read()               [date-provider.c:18]
+    <- RunDailyCycle()                   [daily-cycle.c:268]
+    <- main()                            [main.c:17]
+```
+
+При портировании на МК источник времени будет заменен на **RTC**. Реализацию `DateProvider` нужно будет проверить дополнительно - чтобы работа с **RTC** не приводила к динамическому выделению памяти.
 
 * * *
 

@@ -58,7 +58,7 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * Both build targets compile with the following compiler flags: `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
 * C11 standard compliance is strictly enforced, with extensions disabled for the MCU-bound `fao56_app` target: `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
 * The codebase was [`checked`](Docs/Devjournal/Devlogs/devlog18-review-and-improvements-v010.md) with the `cppcheck` static analyzer.  
-* The PC test binary was [`checked`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) with Valgrind, AddressSanitizer, and UndefinedBehaviorSanitizer to detect memory errors, leaks, and undefined behavior.  
+* The PC test binary was [`checked`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) with Valgrind (`--leak-check=full --track-origins=yes`), AddressSanitizer, and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined`) to detect memory errors, leaks, and undefined behavior.  
 * Numeric inputs to the calculation layer are validated for `NaN` and infinite values and, where applicable, against valid ranges before use.  
 * CI (GitHub Actions) builds both targets, runs the full test suite, and runs the test suite with AddressSanitizer and UndefinedBehaviorSanitizer on every `push` and `pull request`.
 
@@ -67,7 +67,7 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 ## Limitations and open questions of v0.1.x
 
 * Sensor data is currently emulated using fixed constants; no real hardware is involved yet.  
-* `time()` from `<time.h>` is used for the current day of year and illuminance measurement timestamps; on an MCU, this requires RTC integration.  
+* `time()` from `<time.h>` is used for the current day of year and illuminance measurement timestamps. The PC implementation causes an internal heap allocation in [`libc`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) when timezone information is initialized; this allocation is not performed by application code. When porting to an MCU, the PC time implementation will be replaced with RTC access, and the MCU implementation should be verified to ensure that it does not introduce dynamic memory allocation.  
 * State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
