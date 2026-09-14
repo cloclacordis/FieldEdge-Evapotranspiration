@@ -1,188 +1,6 @@
-# devlog19. Дополнительные проверки и документация *v0.1.0* (обновляется)
+# High-level architecture: layers & modules
 
-*Adds Valgrind memory checks, introduces optional AddressSanitizer and UndefinedBehaviorSanitizer builds via a dedicated `ENABLE_SANITIZERS` CMake option. Verifies the sanitizer configuration, confirms that all 58 tests pass without sanitizer errors, and validates the actual compile and link flags with a verbose `fao56_test` build. Extends CI with a dedicated sanitizer job that configures, builds, and runs the test suite with CTest. The devlog will be updated with the software architecture documentation and related supporting documents.*
-
-* * *
-
-## Дополнительные проверки
-
-### Valgrind
-
-Запустим проверку `fao56_test`:
-
-```bash
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 ./fao56_test
-```
-
-![](resources/1900-valgrind-output-1.png)  
-![](resources/1901-valgrind-output-2.png)
-
-Проверка завершилась без обнаружения ошибок управления памятью.
-
-**Valgrind** показал `9 allocs, 9 frees`. В файлах нашего исходного кода динамическое выделение памяти не применяется. Дополнительная проверка через **GDB** показала, что наблюдаемое выделение памяти происходит внутри `libc` при работе с локальным временем, а не непосредственно в коде приложения. `DateProvider_Read()` вызывает **API** работы со временем на ПК, после чего системная библиотека при обработке часового пояса (`/etc/localtime`) выполняет внутренний `malloc()`.
-
-Цепочка вызовов имеет следующий вид:
-
-```
-__GI___libc_malloc(15)                   [malloc/malloc.c:3294]
-    <- __GI___strdup("/etc/localtime")   [string/strdup.c:42]
-    <- tzset_internal()                  [time/tzset.c:402]
-    <- __tz_convert()                    [time/tzset.c:577]
-    <- DateProvider_Read()               [date-provider.c:18]
-    <- RunDailyCycle()                   [daily-cycle.c:268]
-    <- main()                            [main.c:17]
-```
-
-При портировании на МК источник времени будет заменен на **RTC**. Реализацию `DateProvider` нужно будет проверить дополнительно - чтобы работа с **RTC** не приводила к динамическому выделению памяти.
-
-* * *
-
-### AddressSanitizer, UndefinedBehaviorSanitizer
-
-Добавим в `CMakeLists.txt`:
-
-```Cmake
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-
-# Добавление
-option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
-
-...
-
-target_link_libraries(fao56_test m unity)
-target_compile_definitions(unity PUBLIC UNITY_INCLUDE_DOUBLE)
-target_compile_options(fao56_test PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
-
-# Добавление
-if(ENABLE_SANITIZERS)
-    target_compile_options(fao56_test PRIVATE 
-            -fsanitize=address,undefined 
-            -fno-omit-frame-pointer 
-            -g
-    )
-
-    target_link_options(fao56_test PRIVATE 
-            -fsanitize=address,undefined
-    )
-endif()
-
-# CTest
-enable_testing()
-add_test(NAME fao56_suite COMMAND fao56_test)
-```
-
-Добавим конфигурацию в **CLion**:
-
-```md
-File -> Settings -> Build, Execution, Deployment -> CMake
-```
-
-Создадим новую конфигурацию с именем `Sanitizers` и включим в **CMake options** строку:
-
-```bash
--DENABLE_SANITIZERS=ON
-```
-
-![](resources/1902-cmake-options.png)
-
-Сохраним настройки.
-
-**CMake profile** `Sanitizers`, затем **target** `fao56_test`.
-
-![](resources/1903-cmake-profile.png)
-
-Запустим сборку.
-
-Получили успешную сборку.
-
-![](resources/1904-sanitizer-build-output.png)
-
-Запустим `fao56_test`.
-
-![](resources/1905-sanitizer-run-output.png)
-
-
-Тестовая программа завершилась успешно. Сборка и запуск тестов выполнены с включенными **AddressSanitizer** и **UndefinedBehaviorSanitizer**. Все 58 тестов пройдены успешно, сообщений об ошибках не получено.
-
-Корректность применения *sanitizer*-флагов дополнительно проверена с помощью *verbose*-сборки:
-
-```bash
-cmake --build cmake-build-sanitizers --target fao56_test --verbose
-```
-
-> В командах компиляции исходных файлов `fao56_test` можно видеть флаги `-fsanitize=address,undefined`. При финальной линковке исполняемого файла `fao56_test` этот флаг также присутствует.
-
-* * *
-
-### Автоматизация CI
-
-В файл `.github/workflows/build-and-test.yml` добавим рядом с `build-and-test` новую проверку/`job` (`sanitizer`):
-
-```yaml
-name: Build and Test
-on: [push, pull_request]
-
-...
-
-  sanitizer:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Get source code
-        uses: actions/checkout@v6
-
-      - name: Configure
-        run: cmake -S Code -B build-sanitizers -DENABLE_SANITIZERS=ON
-
-      - name: Build
-        run: cmake --build build-sanitizers
-
-      - name: Test
-        run: ctest --test-dir build-sanitizers --output-on-failure
-```
-
-> Автоматические проверки настроены и выполняют работу.
-
-* * *
-
-## Документация
-
-### Контекстная диаграмма
-
-The system operates at the edge, acquiring agrometeorological data from sensors, processing and validating the measurements, and calculating reference evapotranspiration (ETo). The resulting ETo value is provided to an external irrigation system for local irrigation decision-making and control. Version v0.1.x implements the measurement and computation pipeline on a PC using emulated sensor data. Version v0.2.x is the STM32 implementation under development with real sensors, LoRa communication, and real-time operation.
-
-```mermaid
-flowchart LR
-    ENV["Environmental<br/>conditions"]
-    SENS["Sensors"]
-
-    subgraph FieldEdge["FieldEdge"]
-        direction LR
-        MEAS["Measurement<br/>subsystem"]
-        CALC["Computation<br/>kernel"]
-        MEAS -->|"Measurement data"| CALC
-    end
-
-    DEC["Irrigation<br/>system"]
-
-    ENV -->|"Physical quantities"| SENS
-    SENS -->|"Sensor readings"| MEAS
-    CALC -->|"ETo value"| DEC
-
-    classDef external fill:#f7f7f7,stroke:#555,stroke-width:1.5px,color:#222
-    classDef system fill:#eaf2f8,stroke:#2c5f85,stroke-width:2px,color:#111
-    classDef internal fill:#fff,stroke:#2c5f85,stroke-width:1.5px,color:#111
-
-    class ENV,SENS,DEC external
-    class MEAS,CALC internal
-```
-
-* * *
-
-### Диаграмма архитектуры ПО
-
-#### Общие сведения
+## General information
 
 The **FieldEdge-Evapotranspiration** software is organized into five functional subsystems with unidirectional dependencies. The **Orchestration** subsystem coordinates the overall measurement and calculation pipeline. Among the downstream components, the **Measurement** subsystem acquires sensor data, **Providers** supply external and deployment-specific data, **Validation** ensures shared validation and status handling, and **Calculation** executes the ETo computation.
 
@@ -190,7 +8,7 @@ The **Calculation** subsystem remains independent of sensor hardware, decoupled 
 
 * * *
 
-#### Структура проекта
+## Project structure
 
 The project structure for v0.1.x is as follows.
 
@@ -276,7 +94,7 @@ FieldEdge-Evapotranspiration
 
 * * *
 
-#### Слои и модули
+## Layers & modules diagram
 
 The core of the system consists of two independent layers: `measurement` (01) and `calculation` (04). Neither depends on the other — there is no dependency edge between them in either direction. They are connected only through `orchestration` (05), which reads sensor data and invokes the calculation pipeline within the same run.
 
@@ -392,4 +210,4 @@ For dependencies between individual functions, types, and modules, see the Doxyg
 
 A fallback image in case the Mermaid diagram does not display correctly.
 
-![](resources/1906-v01x-layer-diagram.png)
+![](Devjournal/Devlogs/resources/1906-v01x-layer-diagram.png)

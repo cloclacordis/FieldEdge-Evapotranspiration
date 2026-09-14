@@ -31,6 +31,8 @@ The software uses layers with strictly unidirectional dependencies.
 
 The calculation layer is a pure computation kernel. The computation kernel has no knowledge of sensors: it receives validated inputs and returns results. Integration with sensors occurs only in the orchestration layer, specifically in the daily cycle routine (in v0.1.x, sensor readings are provided by PC-based emulation).
 
+See [`Docs/software-architecture-diagram.md`](Docs/software-architecture-diagram.md).
+
 Deployment parameters (anemometer height, geographic coordinates, elevation, crop coefficient Kc, and sensor thresholds) are defined in [`Code/02-providers/022-configurations/deployment-config.h`](Code/02-providers/022-configurations/deployment-config.h). Model constants (λ, Stefan–Boltzmann σ, etc.) are defined locally within each computation module in [`Code/04-calculation/.../*-calc.c`](Code/04-calculation). Shared mathematical constants used across files (π, degree/radian conversion) are defined in [`Code/03-validation/034-math-utils/math-utils.h`](Code/03-validation/034-math-utils/math-utils.h).
 
 All public functions return a [`Status`](Code/03-validation/033-status) value. Results are written to out-parameters. Pointer arguments are checked for `NULL` first in every function. Numeric inputs are checked for `NaN` and infinite values before any arithmetic operation.
@@ -46,7 +48,7 @@ Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `init
 OK
 ```
 
-All test cases are verified against worked examples from FAO-56 ([1998](https://www.fao.org/4/x0490e/x0490e00.htm); see also [2025](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)).  
+All test cases are verified against worked examples from FAO-56 [`1998`](https://www.fao.org/4/x0490e/x0490e00.htm) (see also [`2025`](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)).  
 Reference values and tolerances are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
 
 * * *
@@ -77,7 +79,8 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 
 ## Documentation (in progress)
 
-* [`System context diagram`](Docs/system-context-diagram.md).
+* [`System context diagram`](Docs/system-context-diagram.md).  
+* [`Software architecture diagram`](Docs/software-architecture-diagram.md).
 
 * * *
 
