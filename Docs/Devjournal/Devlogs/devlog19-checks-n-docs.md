@@ -393,3 +393,11 @@ For dependencies between individual functions, types, and modules, see the Doxyg
 A fallback image in case the Mermaid diagram does not display correctly.
 
 ![](resources/1906-v01x-layer-diagram.png)
+
+* * *
+
+### Подтвержденный порядок вызовов
+
+*Verified call graph* описан на основе анализа кода статическими и динамическими средствами: *cflow* и *gdb*. Подробный лог работы с отладчиком занял бы слишком много места даже для девлога. Результаты анализа и документацию вызовов см. непосредственно в файле [`verified-call-graph.md`](../../verified-call-graph.md). Ниже приводится вывод статической структуры вызовов первого уровня для оркестрирующей функции `RunDailyCycle()`.
+
+![](resources/1907-cflow-run-daily-cycle.png)

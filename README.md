@@ -80,7 +80,8 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 ## Documentation (in progress)
 
 * [`System context diagram`](Docs/system-context-diagram.md).  
-* [`Software architecture diagram`](Docs/software-architecture-diagram.md).
+* [`Software architecture diagram`](Docs/software-architecture-diagram.md).  
+* [`Verified call graph`](Docs/verified-call-graph.md).
 
 * * *
 
