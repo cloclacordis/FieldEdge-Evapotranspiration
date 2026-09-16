@@ -401,3 +401,129 @@ A fallback image in case the Mermaid diagram does not display correctly.
 *Verified call graph* описан на основе анализа кода статическими и динамическими средствами: *cflow* и *gdb*. Подробный лог работы с отладчиком занял бы слишком много места даже для девлога. Результаты анализа и документацию вызовов см. непосредственно в файле [`verified-call-graph.md`](../../verified-call-graph.md). Ниже приводится вывод статической структуры вызовов первого уровня для оркестрирующей функции `RunDailyCycle()`.
 
 ![](resources/1907-cflow-run-daily-cycle.png)
+
+* * *
+
+### Документация открытых проблем
+
+Для v0.1.0 задокументированы следующие проблемы (см. [`issues-v01x.md`](../../issues-v01x.md)).
+
+#### 1. Из раздела *"Limitations and open questions of v0.1.x"* `README.md`:
+
+* Sensor data is currently emulated using fixed constants; no real hardware is involved yet.  
+* `time()` from `<time.h>` is used for the current day of year and illuminance measurement timestamps. The PC implementation causes an internal heap allocation in `libc` when timezone information is initialized; this allocation is not performed by application code. When porting to an MCU, the PC time implementation will be replaced with RTC access, and the MCU implementation should be verified to ensure that it does not introduce dynamic memory allocation.  
+* State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
+* The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
+* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
+* The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.
+
+* * *
+
+#### 2. Из первой версии документа `issues-v01x.md`:
+
+**A) `pressure_sample.source` may read indeterminate memory.**
+
+* Location: `Code/05-orchestration/daily-cycle.c`, pressure acquisition branch. Root cause: `Code/05-orchestration/main.c:15` (`DailyResults results;`, declared without an initializer).  
+* If `SensorPressure_ReadInstant()` fails while `Calc_PressureFromElevation()` (the elevation-model fallback) succeeds, `pressure_sample` is never written in that branch. `PrintReport()` later reads `pressure_sample.source` to label the pressure source as “sensor” or “model/constant”; in this branch, the field holds indeterminate stack memory rather than a defined value. Because `SENSOR_VALUE_MEASURED` is `0` (see `value-source.h`), a zero-valued leftover byte pattern would silently print “sensor” for a value that came from the model — no error, no abnormal `Status`, only a mislabeled report line.  
+* Status: latent on the PC build. All `Sensor*_ReadInstant()` mock implementations return a non-`STATUS_OK` status only on a `NULL` output pointer, and every call site in `RunDailyCycle()` passes a valid pointer — so this branch is currently unreachable (see `verified-call-graph.md`, “Unverified branches”). It becomes live once a real pressure sensor driver can fail independently of the model. Recommended fix before enabling that driver: zero-initialize `results` in `main()`, or set `pressure_sample.source` explicitly on the model-fallback path.  
+* Full derivation: `dataflow-specification.md`, Observations, item 2 (link to be added).
+
+**B) `e_tmean` is computed but not propagated.**
+
+* Location: `Code/04-calculation/043-vapour-pressure-calc`. Computed by `Calc_SaturationVapourPressure()` from `temperature_data.T_mean_C`, consumed only by `PrintReport()`.  
+* The ETo calculation uses `e_s` (from `Calc_MeanSaturationVapourPressure()`), not `e_tmean`. The underlying formula is independently exercised by `test_AirTemperature_NormalPath_T20` in `main-test.c`; this item is about an unused field in the production dataflow, not an unverified calculation.  
+* Status: no functional impact. Either remove the field from `DailyResults`, or document explicitly that it is diagnostic-only.  
+* Full derivation: `dataflow-specification.md`, Observations, item 1 (link to be added).
+
+**C) `double` precision margin relative to the target FPU.**
+
+* Location: throughout `Code/04-calculation`.  
+* Already tracked in the `README`’s “Limitations and open questions of v0.1.x” as a deliberate, revisit-later decision. Added here as supporting evidence: the existing tolerances, e.g. `TOL_KPA = 0.0001` in `Code/06-test/test-config.h`, are broadly compatible with the numerical resolution of single-precision float for values in the expected operating range. Since the STM32’s Cortex-M4F provides a single-precision FPv4-SP FPU, this supports the feasibility of a future float migration, but the migration should still be validated against actual value ranges and accumulated numerical error.  
+* Status: open, per `README`, pending real data from the MCU port.
+
+**D) Time zone dependency of `DateProvider_Read`.**
+
+* Location: `Code/02-providers/021-date-provider/date-provider.c`.  
+* `localtime()` resolves the current date using the host’s/runtime’s configured local time zone. Day-of-year and solar declination calculations are date-sensitive at the midnight boundary.  
+* Status: open design question for the RTC-based replacement planned for v0.2.x. The time-base semantics (UTC vs. local time, and any required time-zone/DST handling) should be defined explicitly rather than relying on host-runtime time-zone configuration that will not be implicitly available on the MCU.
+
+* * *
+
+### Решение некоторых проблем и обновление документации
+
+Некоторые проблемы из вышеприведенного списка решим сразу же. В частности, решим проблему **A)** и обновим документацию. Кроме того, при анализе проблемы **А)** мы обнаружили, что тот же блок кода не содержит, как нам бы хотелось, инструкции для трассирования потенциальных сбоев. Речь об этом участке кода из функции `RunDailyCycle()` файла `daily-cycle.c`:
+
+```C
+    /* Atmospheric pressure (priority sources for P) */
+    status = SensorPressure_ReadInstant(&out->pressure_sample);
+    out->trace.pressure_read_status = status;
+    if (status == STATUS_OK) {
+        /* Source 1: sensor */
+        out->P_source_kPa = out->pressure_sample.P_kPa;
+    } else {
+        /* Source 2: eq. 7 model, preferred fallback */
+        status = Calc_PressureFromElevation(out->location.elevation_m,
+            &out->P_source_kPa);
+
+        out->trace.pressure_model_status = status;
+
+        if (status != STATUS_OK) {
+            /* Source 3: final fallback level */
+            (void)SensorPressure_ReadDefault(&out->pressure_sample);
+
+            out->P_source_kPa = out->pressure_sample.P_kPa;
+        }
+    }
+```
+
+Как видно, кроме описанной выше проблемы **A)**, здесь также отсутствует регулярная для этой функции *fail-fast* идиома, а именно:
+
+```C
+	status = Step(...);
+	if (status != STATUS_OK) {
+	    *out_failed_step = "Step";
+	    return status;
+	}
+```
+
+Решим обе эти проблемы следующим образом:
+
+```C
+    /* Atmospheric pressure (priority sources for P) */
+    status = SensorPressure_ReadInstant(&out->pressure_sample);
+    out->trace.pressure_read_status = status;
+    if (status == STATUS_OK) {
+        /* Source 1: sensor */
+        out->P_source_kPa = out->pressure_sample.P_kPa;
+    } else {
+        /* Not from the sensor: everything below is reported as "model/constant" */
+        out->pressure_sample.source = SENSOR_VALUE_DEFAULT;
+
+        /* Source 2: eq. 7 model, preferred fallback */
+        status = Calc_PressureFromElevation(out->location.elevation_m, &out->P_source_kPa);
+        out->trace.pressure_model_status = status;
+
+        if (status != STATUS_OK) {
+            /* Source 3: final fallback level */
+            status = SensorPressure_ReadDefault(&out->pressure_sample);
+            if (status != STATUS_OK) {
+                *out_failed_step = "SensorPressure_ReadDefault";
+                return status;
+            }
+
+            out->P_source_kPa = out->pressure_sample.P_kPa;
+        }
+    }
+```
+
+> После внесенных изменений тесты, сборка, анализатор, санитайзеры, программа были запущены - итоговое состояние кода v0.1.0 **проверено** перед публикацией обновлений, программа работает корректно, все ранее описанные проверки и результаты остаются в силе.
+
+* * *
+
+#### Обновим документацию
+
+- Уберем из `issues-v01x.md` пункт **"`pressure_sample.source` may read indeterminate memory"**.
+
+- Уберем из `dataflow-specification.md` (документ готовится и к настоящему моменту еще не опубликован) пункт `Observations, item 2` с тем же содержанием.
+
+- Обновим нумерацию строк кода в документе `verified-call-graph.md` - все *GDB*-документированные функции ниже `SensorPressure_ReadInstant()` изменили построчную нумерацию на +5 строк, это должно быть отражено в обновленном документе (в этом девлоге нумерация остается без изменений и хранит первоначальную запись).

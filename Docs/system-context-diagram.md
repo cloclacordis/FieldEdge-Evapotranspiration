@@ -31,3 +31,12 @@ flowchart LR
     class ENV,SENS,DEC external
     class MEAS,CALC internal
 ```
+
+* * *
+
+## Related documents
+
+* [`Software architecture diagram`](software-architecture-diagram.md).  
+* [`Verified call graph`](verified-call-graph.md).  
+* `Dataflow specification` (link to be added).  
+* `Doxygen contracts` and `conventions` (link to be added).

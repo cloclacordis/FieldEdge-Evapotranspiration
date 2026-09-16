@@ -59,10 +59,10 @@ if (status != STATUS_OK) {
 | `SensorHumidity_ReadInstant` | 122 | Yes | Succeeded; `SensorHumidity_ReadDefault` not called |
 | `AirHumidity_Update` | 132 | Yes | Second-level call: `ValidHumidityPercent`, `validation.c` |
 | `SensorPressure_ReadInstant` | 140 | Yes | Succeeded; pressure source recorded as sensor |
-| `SensorWindSpeed_ReadInstant` | 161 | Yes | Succeeded; `SensorWindSpeed_ReadDefault` not called |
-| `WindSpeed_Update` | 171 | Yes | Second-level calls: `IsValidSpeed`, `IsValidHeight`, `wind-speed-calc.c` |
-| `SensorLux_ReadInstant`, `SunshineLux_Update` | 184, 195 | Yes | Executed 12 times, matching `DAILY_CYCLE_MOCK_LUX_SAMPLE_COUNT`; second-level call: `SunshineLux_IsBright`, `sunshine-lux-calc.c` |
-| `SunshineLux_FinalizeDay` | 206 | Yes | — |
+| `SensorWindSpeed_ReadInstant` | 166 | Yes | Succeeded; `SensorWindSpeed_ReadDefault` not called |
+| `WindSpeed_Update` | 176 | Yes | Second-level calls: `IsValidSpeed`, `IsValidHeight`, `wind-speed-calc.c` |
+| `SensorLux_ReadInstant`, `SunshineLux_Update` | 189, 200 | Yes | Executed 12 times, matching `DAILY_CYCLE_MOCK_LUX_SAMPLE_COUNT`; second-level call: `SunshineLux_IsBright`, `sunshine-lux-calc.c` |
+| `SunshineLux_FinalizeDay` | 211 | Yes | — |
 
 * * *
 
@@ -70,21 +70,21 @@ if (status != STATUS_OK) {
 
 | Function | Line | Verified | Note |
 |---|---|---|---|
-| `AirTemperature_Update` | 215 | Yes | Second-level call: `ValidTemperatureC`, `validation.c` |
-| `Calc_SaturationVapourPressure` | 223 | Yes | Second-level call: `Calc_TetensSaturationPressure`, `vapour-pressure-calc.c` |
-| `Calc_MeanSaturationVapourPressure` | 230 | Yes | — |
-| `Calc_SlopeDelta` | 237 | Yes | — |
-| `Calc_AtmosphericParameters` | 244 | Yes | — |
-| `Calc_ActualVapourPressure` | 252 | Yes | Second-level call: `Calc_SaturationVapourPressure`, `vapour-pressure-calc.c`, called twice |
-| `Calc_WindSpeedAt2m` | 260 | Yes | — |
-| `DateProvider_Read` | 268 | Yes | — |
-| `DayCalc_JFromDate` | 274 | Yes | Returns `uint16_t`, not `Status`; result assigned directly, no status check |
-| `DayCalc_Update` | 277 | Yes | Second-level calls: `ValidDayOfYear`, `ValidLatitudeRad`, `validation.c` |
-| `Calc_Ra` | 285 | Yes | — |
-| `SolarRadiation_Calc` | 293 | Yes | Second-level call: `Min`, `math-utils.h` |
-| `Calc_NetRadiation` | 302 | Yes | Second-level calls: `Min`, `Max`, `math-utils.h` |
-| `Calc_ETo` | 310 | Yes | Second-level calls: `Min`, `Max`, `math-utils.h` |
-| `Calc_ETc` | 328 | Yes | — |
+| `AirTemperature_Update` | 220 | Yes | Second-level call: `ValidTemperatureC`, `validation.c` |
+| `Calc_SaturationVapourPressure` | 228 | Yes | Second-level call: `Calc_TetensSaturationPressure`, `vapour-pressure-calc.c` |
+| `Calc_MeanSaturationVapourPressure` | 235 | Yes | — |
+| `Calc_SlopeDelta` | 242 | Yes | — |
+| `Calc_AtmosphericParameters` | 249 | Yes | — |
+| `Calc_ActualVapourPressure` | 257 | Yes | Second-level call: `Calc_SaturationVapourPressure`, `vapour-pressure-calc.c`, called twice |
+| `Calc_WindSpeedAt2m` | 265 | Yes | — |
+| `DateProvider_Read` | 273 | Yes | — |
+| `DayCalc_JFromDate` | 279 | Yes | Returns `uint16_t`, not `Status`; result assigned directly, no status check |
+| `DayCalc_Update` | 282 | Yes | Second-level calls: `ValidDayOfYear`, `ValidLatitudeRad`, `validation.c` |
+| `Calc_Ra` | 290 | Yes | — |
+| `SolarRadiation_Calc` | 298 | Yes | Second-level call: `Min`, `math-utils.h` |
+| `Calc_NetRadiation` | 307 | Yes | Second-level calls: `Min`, `Max`, `math-utils.h` |
+| `Calc_ETo` | 315 | Yes | Second-level calls: `Min`, `Max`, `math-utils.h` |
+| `Calc_ETc` | 333 | Yes | — |
 
 Control returns to `main.c:19` (`if (status != STATUS_OK)`), confirmed directly by the GDB stepping trace.
 

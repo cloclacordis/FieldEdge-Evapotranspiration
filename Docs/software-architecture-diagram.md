@@ -211,3 +211,12 @@ For dependencies between individual functions, types, and modules, see the Doxyg
 A fallback image in case the Mermaid diagram does not display correctly.
 
 ![](Devjournal/Devlogs/resources/1906-v01x-layer-diagram.png)
+
+* * *
+
+## Related documents
+
+* [`System context diagram`](system-context-diagram.md).  
+* [`Verified call graph`](verified-call-graph.md).  
+* `Dataflow specification` (link to be added).  
+* `Doxygen contracts` and `conventions` (link to be added).
