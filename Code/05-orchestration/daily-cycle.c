@@ -143,15 +143,20 @@ Status RunDailyCycle(DailyResults *out, const char **out_failed_step) {
         /* Source 1: sensor */
         out->P_source_kPa = out->pressure_sample.P_kPa;
     } else {
-        /* Source 2: eq. 7 model, preferred fallback */
-        status = Calc_PressureFromElevation(out->location.elevation_m,
-            &out->P_source_kPa);
+        /* Not from the sensor: everything below is reported as "model/constant" */
+        out->pressure_sample.source = SENSOR_VALUE_DEFAULT;
 
+        /* Source 2: eq. 7 model, preferred fallback */
+        status = Calc_PressureFromElevation(out->location.elevation_m, &out->P_source_kPa);
         out->trace.pressure_model_status = status;
 
         if (status != STATUS_OK) {
             /* Source 3: final fallback level */
-            (void)SensorPressure_ReadDefault(&out->pressure_sample);
+            status = SensorPressure_ReadDefault(&out->pressure_sample);
+            if (status != STATUS_OK) {
+                *out_failed_step = "SensorPressure_ReadDefault";
+                return status;
+            }
 
             out->P_source_kPa = out->pressure_sample.P_kPa;
         }

@@ -90,12 +90,12 @@ Status Calc_ActualVapourPressure(double *ea_kPa, const AirTemperatureData *temp,
     Status s = Calc_SaturationVapourPressure(temp->T_min_C, &e_min);
     if (s != STATUS_OK) {
         return s;
-	}
+    }
 
     s = Calc_SaturationVapourPressure(temp->T_max_C, &e_max);
     if (s != STATUS_OK) {
         return s;
-	}
+    }
 
     /* ea = [e(Tmin) * RHmax/100 + e(Tmax) * RHmin/100] / 2 */
     const double ea = (e_min * (humidity->RH_max / 100.0) + e_max * (humidity->RH_min / 100.0)) / 2.0;
