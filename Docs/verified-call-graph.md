@@ -7,7 +7,7 @@ This document specifies the verified call sequence of the production entry point
 Verification basis:
 
 * Static call structure — `cflow`, run against `main.c` and `daily-cycle.c`; the output covers first-level callees only.  
-* Dynamic call order — a GDB-assisted execution trace, breakpointed at `RunDailyCycle()` entry and single-stepped to process exit, using a build with mocked/emulated sensor backends (host execution, not target hardware, for v.0.1.x).
+* Dynamic call order — a GDB-assisted execution trace, breakpointed at `RunDailyCycle()` entry and single-stepped to process exit, using a build with mocked/emulated sensor backends (host execution, not target hardware, for v0.1.x).
 
 The two sources agree exactly on the call order for every step listed below.  
 See also the Doxygen documentation (link to be added).
@@ -148,5 +148,6 @@ Present in source, not exercised in the recorded “happy path” trace:
 ## Related documents
 
 * [`Software architecture diagram`](software-architecture-diagram.md).  
-* `Data flow specification` (link to be added).  
-* `Doxygen contracts` and `conventions` (link to be added).
+* `Dataflow specification` (link to be added).  
+* `Doxygen contracts` and `conventions` (link to be added).  
+* [`Issues v0.1.x`](issues-v01x.md).

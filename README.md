@@ -75,13 +75,16 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
 * The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.
 
+Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
+
 * * *
 
 ## Documentation (in progress)
 
 * [`System context diagram`](Docs/system-context-diagram.md).  
 * [`Software architecture diagram`](Docs/software-architecture-diagram.md).  
-* [`Verified call graph`](Docs/verified-call-graph.md).
+* [`Verified call graph`](Docs/verified-call-graph.md).  
+* [`Issues v0.1.x`](Docs/issues-v01x.md).
 
 * * *
 
