@@ -9,9 +9,9 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 ## 1. `e_tmean` is computed but not propagated
 
 * Location: `Code/04-calculation/043-vapour-pressure-calc`. Computed by `Calc_SaturationVapourPressure()` from `temperature_data.T_mean_C`, consumed only by `PrintReport()`.  
-* The ETo calculation uses `e_s` (from `Calc_MeanSaturationVapourPressure()`), not `e_tmean`. The underlying formula is independently exercised by `test_AirTemperature_NormalPath_T20` in `main-test.c`; this item is about an unused field in the production dataflow, not an unverified calculation.  
+* The ETo calculation uses `e_s` (from `Calc_MeanSaturationVapourPressure()`), not `e_tmean`. The underlying formula is independently exercised by `test_AirTemperature_NormalPath_T20` in `main-test.c`; this item is about an unused field in the production data flow, not an unverified calculation.  
 * Status: no functional impact. Either remove the field from `DailyResults`, or document explicitly that it is diagnostic-only.  
-* Full derivation: `dataflow-specification.md`, Observations, item 1 (link to be added).
+* See also [`Data flow specification`](data-flow-specification.md).
 
 * * *
 
@@ -34,6 +34,6 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 ## Related documents
 
 * [`Verified call graph`](verified-call-graph.md).  
-* `Dataflow specification` (link to be added).  
-* `Doxygen contracts` and `conventions` (link to be added).  
-* [`Software architecture diagram`](software-architecture-diagram.md).  
+* [`Data flow specification`](data-flow-specification.md).  
+* `Doxygen source documentation` (link to be added).  
+* [`Software architecture diagram`](software-architecture-diagram.md).

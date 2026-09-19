@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document specifies the data flow of the `RunDailyCycle()` daily measurement-and-calculation cycle, expressed as producer/consumer relationships over the fields of the [`DailyResults` structure](../Code/05-orchestration/daily-cycle.h). It complements [`verified-call-graph.md`](verified-call-graph.md), which specifies control flow (call order) for the same function.
+This document specifies the data flow of the `RunDailyCycle()` daily measurement-and-calculation cycle, expressed as producer/consumer relationships over the fields of the [`DailyResults`](../Code/05-orchestration/daily-cycle.h) structure. It complements [`verified-call-graph.md`](verified-call-graph.md), which specifies control flow (call order) for the same function.
 
 * * *
 
@@ -109,94 +109,9 @@ This document specifies the data flow of the `RunDailyCycle()` daily measurement
 
 A coarser view of the same data flow, grouped by the categories defined in “Data model” and “Field reference” above.
 
-```mermaid
-flowchart LR
-    subgraph Acquisition
-        TS[t_sample]
-        HS[humidity_sample]
-        PS[pressure_sample]
-        WS[wind_sample]
-        LS[lux_sample]
-    end
+![](Devjournal/Devlogs/resources/1908-data-flow-diagram.png)
 
-    subgraph LayerState[Layer state]
-        TD[temperature_data]
-        HD[humidity_data]
-        WD[wind_data]
-        SD[sunshine_data]
-    end
-
-    subgraph Context
-        LOC[location]
-        DATE[date]
-        CJ[current_j]
-        DD[day_data]
-    end
-
-    subgraph Radiation[Radiation chain]
-        RA[ra_data]
-        ANG[angstrom]
-        SR[solar_radiation]
-        NR[net_radiation]
-    end
-
-    subgraph Scalars[Derived intermediates]
-        ETM[e_tmean]
-        ES[e_s]
-        DELTA[delta]
-        EA[ea_kpa]
-        PSRC[P_source_kPa]
-        AD[atmos_data]
-        U2[u2]
-    end
-
-    subgraph Outputs[Final outputs]
-        ETO[eto_mm_day]
-        ETC[etc_mm_day]
-    end
-
-    TS --> TD
-    HS --> HD
-    PS --> PSRC
-    WS --> WD
-    LS --> SD
-
-    TD --> ETM
-    TD --> ES
-    TD --> DELTA
-    TD --> EA
-    TD --> ETO
-    HD --> EA
-
-    LOC --> DD
-    DATE --> CJ --> DD
-    LOC --> RA
-    DD --> RA
-    LOC --> SR
-    DD --> SR
-    ANG --> SR
-    SD --> SR
-    RA --> SR
-
-    PSRC --> AD
-    AD --> ETO
-
-    TD --> NR
-    SR --> NR
-    EA --> NR
-    NR --> ETO
-
-    WD --> U2
-    U2 --> ETO
-    ES --> ETO
-    DELTA --> ETO
-    EA --> ETO
-
-    ETO --> ETC
-```
-
-**Note.** The `trace` is omitted from the diagram — it is written by nearly every step.  
-For a fallback image in case the Mermaid diagram does not display correctly, see [`data-flow-diagram.png`](Devjournal/Devlogs/resources/1908-data-flow-diagram.png).
+**Note.** The `trace` is omitted from the diagram — it is written by nearly every step.
 
 * * *
 

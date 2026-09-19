@@ -48,8 +48,7 @@ Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `init
 OK
 ```
 
-All test cases are verified against worked examples from FAO-56 [`1998`](https://www.fao.org/4/x0490e/x0490e00.htm) (see also [`2025`](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)).  
-Reference values and tolerances are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
+All test cases are verified against worked examples from FAO-56 [`1998`](https://www.fao.org/4/x0490e/x0490e00.htm) (see also [`2025`](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)). Reference values and tolerances are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
 
 * * *
 
@@ -84,6 +83,8 @@ Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
 * [`System context diagram`](Docs/system-context-diagram.md).  
 * [`Software architecture diagram`](Docs/software-architecture-diagram.md).  
 * [`Verified call graph`](Docs/verified-call-graph.md).  
+* [`Data flow specification`](Docs/data-flow-specification.md).  
+* `Doxygen source documentation` (link to be added).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
 
 * * *

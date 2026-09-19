@@ -1,6 +1,6 @@
-# High-level architecture: layers & modules
+# High-level architecture: layers and modules
 
-## General information
+## Scope
 
 The **FieldEdge-Evapotranspiration** software is organized into five functional subsystems with unidirectional dependencies. The **Orchestration** subsystem coordinates the overall measurement and calculation pipeline. Among the downstream components, the **Measurement** subsystem acquires sensor data, **Providers** supply external and deployment-specific data, **Validation** ensures shared validation and status handling, and **Calculation** executes the ETo computation.
 
@@ -94,7 +94,7 @@ FieldEdge-Evapotranspiration
 
 * * *
 
-## Layers & modules diagram
+## Layers and modules diagram
 
 The core of the system consists of two independent layers: `measurement` (01) and `calculation` (04). Neither depends on the other — there is no dependency edge between them in either direction. They are connected only through `orchestration` (05), which reads sensor data and invokes the calculation pipeline within the same run.
 
@@ -206,7 +206,7 @@ flowchart TB
 
 * * *
 
-For dependencies between individual functions, types, and modules, see the Doxygen reference (a link will be added later).
+For dependencies between individual functions, types, and modules, see the `Doxygen source documentation` (link to be added).
 
 A fallback image in case the Mermaid diagram does not display correctly.
 
@@ -218,5 +218,5 @@ A fallback image in case the Mermaid diagram does not display correctly.
 
 * [`System context diagram`](system-context-diagram.md).  
 * [`Verified call graph`](verified-call-graph.md).  
-* `Dataflow specification` (link to be added).  
-* `Doxygen contracts` and `conventions` (link to be added).
+* [`Data flow specification`](data-flow-specification.md).  
+* `Doxygen source documentation` (link to be added).
