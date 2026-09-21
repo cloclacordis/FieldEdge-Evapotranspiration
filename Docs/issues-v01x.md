@@ -2,7 +2,7 @@
 
 ## Scope
 
-Findings from reading the code, beyond the FAO-56 reference test suite and the static/dynamic checks listed under “Code quality” in the project `README`. Each item is either deferred to v0.2.x (MCU port) with an explicit reason, or is independent of the port and can be addressed on its own schedule. This document complements “Limitations and open questions of v0.1.x” in the `README`.
+Findings from reading the code, beyond the FAO-56 reference test suite and the static/dynamic checks listed under “Code quality” in the project [`README`](../README.md). Each item is either deferred to v0.2.x (MCU port) with an explicit reason, or is independent of the port and can be addressed on its own schedule. This document complements “Limitations and open questions of v0.1.x” in the `README`.
 
 * * *
 
@@ -36,4 +36,5 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * `Doxygen source documentation` (link to be added).  
-* [`Software architecture diagram`](software-architecture-diagram.md).
+* [`Software architecture diagram`](software-architecture-diagram.md).  
+* [`README`](../README.md).

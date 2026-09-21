@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document specifies the verified call sequence of the production entry point (`main.c` -> `RunDailyCycle()`, `fao56_app`) for a single execution in which every step completes without error (“happy path”).
+This document specifies the verified call sequence of the production entry point (`main.c` -> `RunDailyCycle()`, `fao56_app`) for a single execution in which all steps complete successfully (the “happy path”).
 
 Verification basis:
 
@@ -12,7 +12,7 @@ Verification basis:
 The two sources agree exactly on the call order for every step listed below.  
 See also the `Doxygen source documentation` (link to be added).
 
-This document covers the “happy path” only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises “non-happy-path” scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document; it will be addressed in a future revision.
+This document covers the happy path only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises error-path scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document; it will be addressed in a future revision.
 
 Line numbers below refer to `daily-cycle.c` as it existed at the time of the GDB trace (`2026-09-14`). Verify against the current repository state before relying on them for navigation.
 
@@ -115,23 +115,13 @@ int main(void) {
 | `status == STATUS_OK` | `PrintReport` | Yes, exercised in this GDB trace |
 | `status != STATUS_OK` | `PrintStatusAndReturn` | No, present in source, not exercised in this GDB trace |
 
-* * *
-
-```mermaid
-flowchart TD
-    A["main()"] --> B["RunDailyCycle()"]
-    B --> C{"status != STATUS_OK"}
-    C -->|"false (“happy path”)"| D["PrintReport()"]
-    C -->|"true (“non-happy-path”)"| E["PrintStatusAndReturn()"]
-    D --> F["return 0"]
-    E --> G["return 1"]
-```
+![](Devjournal/Devlogs/resources/1910-outcome-dispatch-diagram.png)
 
 * * *
 
 ## Unverified branches
 
-Present in source, not exercised in the recorded “happy path” trace:
+Present in source, not exercised in the recorded happy path trace:
 
 * `SensorTemperature_ReadDefault` — fallback for `SensorTemperature_ReadInstant`.  
 * `SensorHumidity_ReadDefault` — fallback for `SensorHumidity_ReadInstant`.  

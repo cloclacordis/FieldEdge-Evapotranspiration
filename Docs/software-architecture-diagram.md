@@ -113,4 +113,5 @@ Calculation functions operate on validated physical values rather than raw senso
 * [`System context diagram`](system-context-diagram.md).  
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
-* `Doxygen source documentation` (link to be added).
+* `Doxygen source documentation` (link to be added).  
+* [`README`](../README.md).

@@ -17,4 +17,5 @@ The system operates at the edge, acquiring agrometeorological data from sensors,
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
-* `Doxygen source documentation` (link to be added).
+* `Doxygen source documentation` (link to be added).  
+* [`README`](../README.md).

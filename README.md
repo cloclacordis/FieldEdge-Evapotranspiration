@@ -14,7 +14,7 @@
 
 ## Build and run
 
-Requirements: CMake >= 3.31, a C11 compiler.
+Requirements: CMake >= 3.31 and a C11-compatible compiler.
 
 ```bash
 cmake -B build

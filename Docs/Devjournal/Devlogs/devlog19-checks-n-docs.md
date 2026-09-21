@@ -349,7 +349,28 @@ flowchart TB
 
 *Verified call graph* описан на основе анализа кода статическими и динамическими средствами: *cflow* и *gdb*. Подробный лог работы с отладчиком занял бы слишком много места даже для девлога. Результаты анализа и документацию вызовов см. непосредственно в файле [`verified-call-graph.md`](../../verified-call-graph.md). Ниже приводится вывод статической структуры вызовов первого уровня для оркестрирующей функции `RunDailyCycle()`.
 
-![](resources/1907-cflow-run-daily-cycle.png)
+![](resources/1907-cflow-run-daily-cycle.png)  
+![](resources/1910-outcome-dispatch-diagram.png)
+
+**Mermaid script:**
+
+```
+flowchart TD
+    MAIN[main]
+    CYCLE[RunDailyCycle]
+    STATUS{status != STATUS_OK}
+    REPORT[PrintReport]
+    ERROR[PrintStatusAndReturn]
+    OK[return 0]
+    FAIL[return 1]
+
+    MAIN --> CYCLE
+    CYCLE --> STATUS
+    STATUS -->|false · happy path| REPORT
+    STATUS -->|true · error path | ERROR
+    REPORT --> OK
+    ERROR --> FAIL
+```
 
 * * *
 
