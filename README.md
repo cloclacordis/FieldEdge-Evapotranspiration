@@ -1,5 +1,7 @@
 # FieldEdge-Evapotranspiration
 
+[![CI](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 ## About
 
 **FieldEdge-Evapotranspiration** is open-source software for calculating reference evapotranspiration (ETo) according to the FAO-56 Penman–Monteith methodology, designed for integration into irrigation control and decision-support systems. It comprises a hardware-agnostic C11 computation kernel and an STM32-based embedded implementation. The software aims to provide practical, accessible tools for local communities and small-scale agricultural users and is available for local deployment without reliance on proprietary platforms or centralized services.
@@ -7,6 +9,27 @@
 **Computation kernel (v0.1.x)** — a C11 implementation of the ETo calculation pipeline. It is complete, tested, and runs on a PC using emulated sensor data. The computation kernel is designed to be reusable independently of the target hardware.
 
 **Embedded implementation (v0.2.x under development)** will integrate the computation kernel into an STM32-based embedded system with real sensors, LoRa wireless communication, and real-time operation.
+
+* * *
+
+## Build and run
+
+Requirements: CMake >= 3.31, a C11 compiler.
+
+```bash
+cmake -B build
+cmake --build build
+./build/fao56_app        # runs the PC computation kernel
+./build/fao56_test       # runs the Unity test suite (58 tests)
+```
+
+To build with the same sanitizers used in CI.
+
+```bash
+cmake -B build -DENABLE_SANITIZERS=ON
+cmake --build build
+./build/fao56_test
+```
 
 * * *
 
@@ -72,9 +95,16 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
-* The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.
+* The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.  
+* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Proper estimation is planned alongside real sensor-driver development in v0.2.x, where the required cross-channel data access will exist “naturally”.
 
 Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
+
+* * *
+
+## Porting or extending
+
+Only [`Code/01-measurement`](Code/01-measurement) needs replacing for new hardware — [`Code/04-calculation`](Code/04-calculation) has no dependency on it in either direction (see [`Software architecture diagram`](Docs/software-architecture-diagram.md)) and should not need to change. Before modifying anything, read [`Verified call graph`](Docs/verified-call-graph.md) (exact call order of the entry point) and [`Data flow specification`](Docs/data-flow-specification.md) (exact field-level dependencies). See also “Limitations and open questions of v0.1.x” above.
 
 * * *
 

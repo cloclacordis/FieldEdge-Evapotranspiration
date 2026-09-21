@@ -152,30 +152,31 @@ on: [push, pull_request]
 
 The system operates at the edge, acquiring agrometeorological data from sensors, processing and validating the measurements, and calculating reference evapotranspiration (ETo). The resulting ETo value is provided to an external irrigation system for local irrigation decision-making and control. Version v0.1.x implements the measurement and computation pipeline on a PC using emulated sensor data. Version v0.2.x is the STM32 implementation under development with real sensors, LoRa communication, and real-time operation.
 
-```mermaid
-flowchart LR
-    ENV["Environmental<br/>conditions"]
-    SENS["Sensors"]
+![](resources/1909-v01x-system-context-diagram.png)
 
-    subgraph FieldEdge["FieldEdge"]
-        direction LR
-        MEAS["Measurement<br/>subsystem"]
-        CALC["Computation<br/>kernel"]
-        MEAS -->|"Measurement data"| CALC
+**Mermaid script:**
+
+```
+flowchart LR
+
+    subgraph Input[Input]
+        ENV[Environmental<br>conditions]
+        SENS[Sensors]
     end
 
-    DEC["Irrigation<br/>system"]
+    subgraph FieldEdge[FieldEdge]
+        MEAS[Measurement]
+        CALC[Calculation]
+    end
 
-    ENV -->|"Physical quantities"| SENS
-    SENS -->|"Sensor readings"| MEAS
-    CALC -->|"ETo value"| DEC
+    subgraph Output[Output]
+        DEC[Irrigation<br>system]
+    end
 
-    classDef external fill:#f7f7f7,stroke:#555,stroke-width:1.5px,color:#222
-    classDef system fill:#eaf2f8,stroke:#2c5f85,stroke-width:2px,color:#111
-    classDef internal fill:#fff,stroke:#2c5f85,stroke-width:1.5px,color:#111
-
-    class ENV,SENS,DEC external
-    class MEAS,CALC internal
+    ENV --> SENS
+    SENS --> MEAS
+    MEAS --> CALC
+    CALC --> DEC
 ```
 
 * * *
@@ -282,117 +283,65 @@ The core of the system consists of two independent layers: `measurement` (01) an
 
 `validation` (03) serves as the foundation: every other layer depends on it, and it has no outgoing dependencies of its own. `providers` (02) is a shared supporting layer that also depends on `validation` (03).
 
-Calculation functions operate on validated physical values rather than raw sensor readings. This allows the entire `measurement` (01) layer can be reworked (e.g., to integrate sensor/peripheral drivers in v0.2.x) without touching a single `calculation` (04) module.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "background": "#12141a",
-    "primaryColor": "#1c1f27",
-    "primaryBorderColor": "#3a3f4b",
-    "primaryTextColor": "#e8e9ec",
-    "lineColor": "#7a8291",
-    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    "fontSize": "14px"
-  },
-  "flowchart": {
-    "curve": "linear",
-    "nodeSpacing": 60,
-    "rankSpacing": 90,
-    "htmlLabels": true
-  },
-  "style": {
-    "global": ".node *, .node td { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; } .node td span { font-family: ui-monospace, SFMono-Regular, SF Pro Text, Menlo, Monaco, Consolas, 'Liberation Mono', monospace !important; font-size: 12px !important; letter-spacing: -0.2px; }"
-  }
-}}%%
- 
-flowchart TB
- 
-  %% LAYER 05 — ORCHESTRATION
-  L05["<table style='width:560px;border-collapse:collapse'>
-    <tr><td style='text-align:left;font-size:18px;font-weight:700;color:#f2c14e;padding:2px 4px 8px 4px'>05 · orchestration</td></tr>
-    <tr><td style='text-align:left;padding:4px;border-top:1px solid #3a3f4b'>
-      <span style='color:#cfd3da'>main&nbsp;&nbsp;·&nbsp;&nbsp;daily-cycle</span>
-    </td></tr>
-  </table>"]
- 
-  %% LAYER 01 — MEASUREMENT
-  L01["<table style='width:560px;border-collapse:collapse'>
-    <tr><td style='text-align:left;font-size:18px;font-weight:700;color:#7fb0e0;padding:2px 4px 8px 4px'>01 · measurement</td></tr>
-    <tr><td style='text-align:left;padding:4px;border-top:1px solid #3a3f4b'>
-      <span style='color:#cfd3da'>
-      011 air-temperature-read&nbsp;&nbsp;·&nbsp;&nbsp;012 air-humidity-read<br/>
-      013 atm-pressure-read&nbsp;&nbsp;·&nbsp;&nbsp;014 sunshine-lux-read<br/>
-      015 wind-speed-read<br/>
-      &nbsp;
-      </span>
-    </td></tr>
-  </table>"]
- 
-  %% LAYER 04 — CALCULATION
-  L04["<table style='width:560px;border-collapse:collapse'>
-    <tr><td style='text-align:left;font-size:18px;font-weight:700;color:#e08a6b;padding:2px 4px 8px 4px'>04 · calculation</td></tr>
-    <tr><td style='text-align:left;padding:4px;border-top:1px solid #3a3f4b'>
-      <span style='color:#cfd3da'>
-      041 air-temperature-calc&nbsp;&nbsp;·&nbsp;&nbsp;042 air-humidity-calc<br/>
-      043 vapour-pressure-calc&nbsp;&nbsp;·&nbsp;&nbsp;044 atmospheric-calc<br/>
-      045 radiation-calc&nbsp;&nbsp;·&nbsp;&nbsp;046 wind-speed-calc<br/>
-      047 evapotranspiration-calc
-      </span>
-    </td></tr>
-  </table>"]
- 
-  %% LAYER 02 — PROVIDERS
-  L02["<table style='width:560px;border-collapse:collapse'>
-    <tr><td style='text-align:left;font-size:18px;font-weight:700;color:#7fc9a4;padding:2px 4px 8px 4px'>02 · providers</td></tr>
-    <tr><td style='text-align:left;padding:4px;border-top:1px solid #3a3f4b'>
-      <span style='color:#cfd3da'>
-      021 date-provider&nbsp;&nbsp;·&nbsp;&nbsp;022 configurations<br/>
-      &nbsp;
-      </span>
-    </td></tr>
-  </table>"]
- 
-  %% LAYER 03 — VALIDATION
-  L03["<table style='width:560px;border-collapse:collapse'>
-    <tr><td style='text-align:left;font-size:18px;font-weight:700;color:#c9cdd6;padding:2px 4px 8px 4px'>03 · validation</td></tr>
-    <tr><td style='text-align:left;padding:4px;border-top:1px solid #3a3f4b'>
-      <span style='color:#cfd3da'>
-      031 value-source&nbsp;&nbsp;·&nbsp;&nbsp;032 validation<br/>
-      033 status&nbsp;&nbsp;·&nbsp;&nbsp;034 math-utils
-      </span>
-    </td></tr>
-  </table>"]
- 
-  %% HIGH-LEVEL DEPENDENCIES ONLY
-  L05 --> L01
-  L05 --> L02
-  L05 --> L03
-  L05 --> L04
- 
-  L04 --> L02
-  L04 --> L03
- 
-  L01 --> L02
-  L01 --> L03
- 
-  L02 --> L03
- 
-  %% NODE STYLES
-  classDef layer fill:#1c1f27,stroke:#3a3f4b,stroke-width:1.5px,color:#e8e9ec,rx:10,ry:10;
-  class L05,L01,L04,L02,L03 layer;
- 
-  linkStyle default stroke:#7a8291,stroke-width:1.6px;
-```
-
-* * *
-
-For dependencies between individual functions, types, and modules, see the Doxygen reference (a link will be added later).
-
-A fallback image in case the Mermaid diagram does not display correctly.
+Calculation functions operate on validated physical values rather than raw sensor readings. This allows the entire `measurement` (01) layer to be reworked (e.g., to integrate sensor/peripheral drivers in v0.2.x) without touching a single `calculation` (04) module.
 
 ![](resources/1906-v01x-layer-diagram.png)
+
+**Mermaid script:**
+
+```
+flowchart TB
+
+    subgraph Measurement[01 · Measurement]
+        M1[air-temperature-read]
+        M2[air-humidity-read]
+        M3[atm-pressure-read]
+        M4[sunshine-lux-read]
+        M5[wind-speed-read]
+    end
+
+    subgraph Providers[02 · Providers]
+        P1[date-provider]
+        P2[configurations]
+    end
+
+    subgraph Validation[03 · Validation]
+        V1[value-source]
+        V2[validation]
+        V3[status]
+        V4[math-utils]
+    end
+
+    subgraph Calculation[04 · Calculation]
+        C1[air-temperature-calc]
+        C2[air-humidity-calc]
+        C3[vapour-pressure-calc]
+        C4[atmospheric-calc]
+        C5[radiation-calc]
+        C6[wind-speed-calc]
+        C7[evapotranspiration-calc]
+    end
+
+    subgraph Orchestration[05 · Orchestration]
+        O1[main]
+        O2[daily-cycle]
+    end
+
+    O1 --> O2
+
+    O2 --> Measurement
+    O2 --> Providers
+    O2 --> Validation
+    O2 --> Calculation
+
+    Calculation --> Providers
+    Calculation --> Validation
+    Measurement --> Providers
+    Measurement --> Validation
+    Providers --> Validation
+```
+
+**Note.** For dependencies between individual functions, types, and modules, see the Doxygen reference (a link will be added later).
 
 * * *
 
@@ -639,8 +588,96 @@ This document specifies the data flow of the `RunDailyCycle()` daily measurement
 
 #### Data flow diagram
 
-A coarser view of the same data flow, grouped by the categories defined in “Data model” and “Field reference” above.
+A view of the same data flow, grouped by the categories defined in “Data model” and “Field reference” above.
 
-![](resources/1908-data-flow-diagram.png)
+![](resources/1908-v01x-data-flow-diagram.png)
+
+**Mermaid script:**
+
+```
+flowchart LR
+    subgraph Acquisition
+        TS[t_sample]
+        HS[humidity_sample]
+        PS[pressure_sample]
+        WS[wind_sample]
+        LS[lux_sample]
+    end
+
+    subgraph LayerState[Layer state]
+        TD[temperature_data]
+        HD[humidity_data]
+        WD[wind_data]
+        SD[sunshine_data]
+    end
+
+    subgraph Context
+        LOC[location]
+        DATE[date]
+        CJ[current_j]
+        DD[day_data]
+    end
+
+    subgraph Radiation[Radiation chain]
+        RA[ra_data]
+        ANG[angstrom]
+        SR[solar_radiation]
+        NR[net_radiation]
+    end
+
+    subgraph Scalars[Derived intermediates]
+        ETM[e_tmean]
+        ES[e_s]
+        DELTA[delta]
+        EA[ea_kpa]
+        PSRC[P_source_kPa]
+        AD[atmos_data]
+        U2[u2]
+    end
+
+    subgraph Outputs[Final outputs]
+        ETO[eto_mm_day]
+        ETC[etc_mm_day]
+    end
+
+    TS --> TD
+    HS --> HD
+    PS --> PSRC
+    WS --> WD
+    LS --> SD
+
+    TD --> ETM
+    TD --> ES
+    TD --> DELTA
+    TD --> EA
+    TD --> ETO
+    HD --> EA
+
+    LOC --> DD
+    DATE --> CJ --> DD
+    LOC --> RA
+    DD --> RA
+    LOC --> SR
+    DD --> SR
+    ANG --> SR
+    SD --> SR
+    RA --> SR
+
+    PSRC --> AD
+    AD --> ETO
+
+    TD --> NR
+    SR --> NR
+    EA --> NR
+    NR --> ETO
+
+    WD --> U2
+    U2 --> ETO
+    ES --> ETO
+    DELTA --> ETO
+    EA --> ETO
+
+    ETO --> ETC
+```
 
 **Note.** The `trace` is omitted from the diagram — it is written by nearly every step.
