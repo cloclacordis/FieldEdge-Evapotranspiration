@@ -114,6 +114,7 @@ Only [`Code/01-measurement`](Code/01-measurement) needs replacing for new hardwa
 * [`Software architecture diagram`](Docs/software-architecture-diagram.md).  
 * [`Verified call graph`](Docs/verified-call-graph.md).  
 * [`Data flow specification`](Docs/data-flow-specification.md).  
+* [`Contracts and conventions`](Docs/contracts-and-conventions.md).  
 * `Doxygen source documentation` (link to be added).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
 

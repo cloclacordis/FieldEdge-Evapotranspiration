@@ -119,5 +119,6 @@ A view of the same data flow, grouped by the categories defined in “Data model
 
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Verified call graph`](verified-call-graph.md).  
+* [`Contracts and conventions`](contracts-and-conventions.md).  
 * `Doxygen source documentation` (link to be added).  
 * [`Issues v0.1.x`](issues-v01x.md).

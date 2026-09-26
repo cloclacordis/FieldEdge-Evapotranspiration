@@ -139,5 +139,6 @@ Present in source, not exercised in the recorded happy path trace:
 
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Data flow specification`](data-flow-specification.md).  
+* [`Contracts and conventions`](contracts-and-conventions.md).  
 * `Doxygen source documentation` (link to be added).  
 * [`Issues v0.1.x`](issues-v01x.md).
