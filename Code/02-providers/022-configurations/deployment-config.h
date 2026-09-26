@@ -8,15 +8,17 @@
 extern "C" {
 #endif
 
-/* *** Type A: Deployment parameters, do not change during runtime *** *** * * ** */
+/* *** Type A: Deployment parameters, do not change during runtime *** *** * * ** ** * */
 
-/* Geographic parameters */
-#define CONFIG_LATITUDE_DEG    (-20.0)  /* FAO56, ex.8: 20°S, southern hemisphere */
-#define CONFIG_LATITUDE_MIN    (0.0)    /* FAO56, ex.8: 20°S, southern hemisphere */
-#define CONFIG_ELEVATION_M     (0.0)    /* Sea level * ** *** * ** * *** * * ** * */
+/* Geographic parameters **** * * * * * ******* * * **** * ***** * ***** *** * ***** * */
+#define CONFIG_LATITUDE_DEG    (-20.0)  /* FAO56, ex.8: 20°S, southern hemisphere **** */
+#define CONFIG_LATITUDE_MIN    (0.0)    /* FAO56, ex.8: 20°S, southern hemisphere ** * */
+#define CONFIG_ELEVATION_M     (0.0)    /* Sea level * ** *** * ** * *** * * ** *** ** */
 
 /* Illuminance threshold for binary sunshine counter *** * * ********* * * ***** * *** */
-#define CONFIG_BRIGHT_LUX_THRESHOLD (20000.0)  /* Preliminary estimate, not calibrated */
+#define CONFIG_BRIGHT_LUX_THRESHOLD (20000.0)  /* Uncalibrated proxy for WMO's 120 W/m^2
+direct-irradiance sunshine threshold - lux is a different,  global/photometric quantity;
+see issues-v01x.md (item 4) and illuminance-proxy.md ** * ****** * * *** * * **** * ** */
 
 /* Illuminance sensor polling period */
 #define CONFIG_SAMPLE_PERIOD_SEC (60U)

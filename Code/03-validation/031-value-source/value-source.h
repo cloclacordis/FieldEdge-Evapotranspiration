@@ -14,6 +14,14 @@ typedef enum {
     SENSOR_VALUE_DEFAULT
 } SensorValueSource;
 
+/**
+ * @brief Returns a human-readable name for a SensorValueSource value.
+ *
+ * @param[in] source A SensorValueSource value. Values not matching any
+ *                   defined enumerator are returned as "UNKNOWN".
+ *
+ * @return "MEASURED", "DEFAULT", or "UNKNOWN" for an unrecognized value.
+ */
 const char* SensorValueSource_ToString(SensorValueSource source);
 
 #ifdef __cplusplus

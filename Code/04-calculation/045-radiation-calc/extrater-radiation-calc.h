@@ -19,10 +19,36 @@ typedef struct {
     bool   initialized;
 } RaData;
 
-/* Zero-initialize the structure */
+/**
+ * @brief Initializes extraterrestrial radiation data to a safe zero state.
+ *
+ * @param[out] data Pointer to the RaData structure to initialize.
+ *                  Must not be NULL.
+ *
+ * @retval STATUS_OK           Initialization succeeded.
+ * @retval STATUS_NULL_POINTER data was NULL.
+ */
 Status RaCalc_Init(RaData* data);
 
-/* Compute Ra for daily period (eq. 21) */
+/**
+ * @brief Computes daily extraterrestrial radiation (FAO-56, eq. 21).
+ *
+ * Ra = (24*60 / pi) * Gsc * dr * [omega_s*sin(phi)*sin(delta) +
+ *      cos(phi)*cos(delta)*sin(omega_s)]
+ *
+ * During polar night (omega_s = 0, from DayCalc_Update()), both terms
+ * vanish and Ra = 0 - no special case needed here.
+ *
+ * @param[out] out Destination for the result. Must not be NULL.
+ * @param[in]  day Day/astronomy data. Must not be NULL;
+ *                 `.initialized` must be true.
+ * @param[in]  loc Location data. Must not be NULL; `.initialized`
+ *                 must be true.
+ *
+ * @retval STATUS_OK            out->Ra_daily is valid.
+ * @retval STATUS_NULL_POINTER  out, day, or loc was NULL.
+ * @retval STATUS_INVALID_VALUE day or loc not initialized.
+ */
 Status Calc_Ra(RaData* out, const DayData* day, const LocationData* loc);
 
 #ifdef __cplusplus

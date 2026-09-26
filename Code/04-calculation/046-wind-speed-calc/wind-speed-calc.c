@@ -21,11 +21,30 @@
 
 /* *** Internal validators *** */
 
-/* isfinite() filters out NaN and +-Inf before range comparison */
+/**
+ * @brief Checks whether a value is a physically plausible wind speed.
+ *
+ * Internal to this file, shared by WindSpeed_Update() and
+ * Calc_WindSpeedAt2m().
+ *
+ * @param[in] u Candidate wind speed [m/s].
+ *
+ * @return true iff `isfinite(u) && 0.0 <= u <= 100.0`.
+ */
 static bool IsValidSpeed(const double u) {
     return isfinite(u) && (u >= WIND_SPEED_MIN_MS) && (u <= WIND_SPEED_MAX_MS);
 }
 
+/**
+ * @brief Checks whether a value is a plausible anemometer height.
+ *
+ * Internal to this file, shared by WindSpeed_Update() and
+ * Calc_WindSpeedAt2m().
+ *
+ * @param[in] z Candidate height [m].
+ *
+ * @return true iff `isfinite(z) && 0.1 <= z <= 200.0`.
+ */
 static bool IsValidHeight(const double z) {
     return isfinite(z) && (z >= WIND_HEIGHT_MIN_M) && (z <= WIND_HEIGHT_MAX_M);
 }

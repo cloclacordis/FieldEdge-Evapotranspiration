@@ -19,14 +19,46 @@ typedef struct {
     bool   initialized;
 } LocationData;
 
-/* Convert latitude from degrees-minutes format to decimal degrees;
- * the sign of degrees determines the hemisphere: negative -> southern hemisphere;
- * requirements:
- * - minutes:   0 <= minutes < 60
- * - degrees: -90 <= degrees <= 90 **** * ***** ** **** ******* ***** * *** * *** */
+/**
+ * @brief Converts a latitude from degrees-minutes to decimal degrees.
+ *
+ * The sign of @p degrees determines the hemisphere and is applied to
+ * the combined 'degrees + minutes' magnitude (a negative @p minutes is
+ * rejected, not treated as a second sign).
+ *
+ * @param[in]  degrees     Degrees component. Must be in [-90, 90].
+ * @param[in]  minutes     Minutes component. Must be in [0, 60).
+ * @param[out] decimal_deg Destination for the result [decimal
+ *                         degrees]. Must not be NULL.
+ *
+ * @retval STATUS_OK            *decimal_deg is valid.
+ * @retval STATUS_NULL_POINTER  decimal_deg was NULL.
+ * @retval STATUS_INVALID_VALUE degrees or minutes out of range.
+ *
+ * @note   The sign of @p degrees determines the hemisphere:
+ *         negative -> southern hemisphere.
+ */
 Status Location_DMS_to_decimal(double degrees, double minutes, double* decimal_deg);
 
-/* Initialize geolocation */
+/**
+ * @brief Initializes location data from deployment configuration.
+ *
+ * Reads CONFIG_ELEVATION_M, CONFIG_LATITUDE_DEG, and
+ * CONFIG_LATITUDE_MIN (deployment-config.h); converts
+ * latitude via Location_DMS_to_decimal() and to radians.
+ *
+ * @param[out] loc Pointer to the LocationData structure to
+ *                 initialize. Must not be NULL.
+ *
+ * @post On success, `.latitude_deg`, `.latitude_rad`, `.elevation_m`
+ *       are set from configuration and `.initialized` is true.
+ *
+ * @retval STATUS_OK            Initialization succeeded.
+ * @retval STATUS_NULL_POINTER  loc was NULL.
+ * @retval STATUS_INVALID_VALUE Propagated verbatim from
+ *                              Location_DMS_to_decimal(); in practice
+ *                              unreachable with the current constants.
+ */
 Status Location_Init(LocationData* loc);
 
 #ifdef __cplusplus

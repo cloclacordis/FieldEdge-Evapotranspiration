@@ -17,6 +17,15 @@ typedef enum {
     STATUS_INTERNAL_ERROR
 } Status;
 
+/**
+ * @brief Returns a human-readable name for a Status value.
+ *
+ * @param[in] status A Status value. Values not matching any defined
+ *                   enumerator are returned as "STATUS_UNKNOWN".
+ *
+ * @return A static string naming @p status, or "STATUS_UNKNOWN"
+ *         for an unrecognized value.
+ */
 const char* Status_ToString(Status status);
 
 #ifdef __cplusplus

@@ -85,16 +85,86 @@ typedef struct {
     double              etc_mm_day;
 } DailyResults;
 
-/* Runs the daily measurement and calculation cycle without I/O;
- * recoverable sensor failures use defaults and are recorded in trace;
- * on failure, returns the status and stores the failed step in
- * out_failed_step; on success, returns STATUS_OK and stores "OK" */
+/**
+ * @brief Runs one full daily measurement-and-calculation cycle
+ *        (FAO-56 ETo/ETc).
+ *
+ * Executes, in strict sequence: initialization of all layer-owned
+ * data structures, measurement acquisition (temperature, humidity,
+ * pressure, wind, illuminance) with per-sensor fallback to defaults,
+ * astronomical and psychrometric calculations, and the FAO-56
+ * Penman-Monteith evapotranspiration chain (ETo, ETc). Performs no
+ * I/O (see PrintReport() / PrintTrace() for reporting).
+ *
+ * Recoverable sensor failures (a single ReadInstant() call failing)
+ * do not abort the cycle: the matching ReadDefault() fallback is used
+ * instead, and the failure is recorded in out->trace. Atmospheric
+ * pressure is the one exception with three, not two, priority sources
+ * (sensor, elevation model, constant) - see the pressure-acquisition
+ * block and data-flow-specification.md. Only an unrecoverable failure
+ * (every fallback for a step failing, or a calculation step failing)
+ * aborts the cycle.
+ *
+ * @param[out] out             Destination for all results. Must not
+ *                             be NULL. On success, every field is
+ *                             populated. On failure, out->trace
+ *                             reflects diagnostics captured up to
+ *                             the failure point; other fields are
+ *                             only partially populated.
+ * @param[out] out_failed_step Destination for a static string naming
+ *                             the failing step. Must not be NULL.
+ *                             Set to "OK" at the start of the call.
+ *
+ * @pre  out != NULL && out_failed_step != NULL.
+ * @post On STATUS_OK: *out_failed_step == "OK" and every *out field
+ *       is valid.
+ * @post On failure: *out_failed_step names the failing step.
+ *
+ * @retval STATUS_OK           The cycle completed; all results are valid.
+ * @retval STATUS_NULL_POINTER out or out_failed_step was NULL.
+ * @retval (other)             Propagated verbatim from the failing
+ *                             step; see *out_failed_step and
+ *                             Status_ToString().
+ *
+ * @see verified-call-graph.md for the exact, gdb-verified call order.
+ * @see data-flow-specification.md for field-level producer/consumer detail.
+ */
 Status RunDailyCycle(DailyResults *out, const char **out_failed_step);
 
-/* Prints acquisition diagnostics stored in trace; performs stdio I/O */
+/**
+ * @brief Prints acquisition diagnostics captured during a
+ *        RunDailyCycle() run.
+ *
+ * For each measurement channel that fell back to a default or
+ * alternate source, prints a one-line warning to stderr naming the
+ * reason (Status_ToString()). Always prints one line per captured
+ * illuminance sample to stdout, regardless of whether that sample
+ * succeeded.
+ *
+ * @param[in] trace Diagnostics to report. Must not be NULL - no NULL
+ *                  check is performed.
+ *
+ * @warning No NULL check on @p trace; passing NULL is undefined behavior.
+ *
+ * @note Shared by both outcomes: called from PrintReport() on success
+ *       and from PrintStatusAndReturn() (main.c) on failure.
+ */
 void PrintTrace(const DailyCycleTrace *trace);
 
-/* Prints the full report for a successful RunDailyCycle() run */
+/**
+ * @brief Prints the full report for a successful RunDailyCycle() run.
+ *
+ * Calls PrintTrace() first, then every report section (data sources,
+ * temperature, atmospheric parameters, wind, astronomy, radiation,
+ * sunshine duration, evapotranspiration).
+ *
+ * @param[in] results A fully populated DailyResults from a run that
+ *                    returned STATUS_OK.
+ *
+ * @warning No NULL check is performed; passing NULL, or a partially
+ *          populated DailyResults from a failed run, is undefined
+ *          behavior - use PrintStatusAndReturn() for the failure case.
+ */
 void PrintReport(const DailyResults *results);
 
 #ifdef __cplusplus

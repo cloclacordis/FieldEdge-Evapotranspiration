@@ -14,7 +14,22 @@
 
 #define SLOPE_DELTA_EPS   (1e-9)      /* Epsilon = 10^-9, or 0.000000001 *** * *** * */
 
-/* Internal (non-public) helper function: Magnus-Tetens equation (eq. 11) */
+/**
+ * @brief Magnus-Tetens saturation vapour pressure formula (FAO-56, eq. 11).
+ *
+ * e(T) = 0.6108 * exp((17.27 * T) / (T + 237.3)).
+ *
+ * Internal to this file; no NULL check (never called with an invalid
+ * pointer - it takes no pointer) and no input validation - callers
+ * (Calc_SaturationVapourPressure() and this file's other Calc_*
+ * functions) are responsible for rejecting non-finite input first.
+ *
+ * @param[in] temperature_c Air temperature [C].
+ *
+ * @return e(T) [kPa], per eq. 11. Not itself range-checked; may be
+ *         non-finite if @p temperature_c is extreme enough to
+ *         overflow `exp()`.
+ */
 static double Calc_TetensSaturationPressure(const double temperature_c) {
     const double exp_term = (TETENS_CONST_B * temperature_c) / (temperature_c + TETENS_CONST_C);
     return TETENS_CONST_A * exp(exp_term);

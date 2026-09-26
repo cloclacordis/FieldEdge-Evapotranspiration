@@ -17,6 +17,20 @@ typedef struct {
     uint8_t  day;
 } DateData;
 
+/**
+ * @brief Reads the current calendar date from the host system clock.
+ *
+ * Wraps time() and localtime(). Uses the host's configured local
+ * time zone. This is a known open question for the RTC-based
+ * replacement in v0.2.x (see README, "Limitations").
+ *
+ * @param[out] date Destination for the date. Must not be NULL.
+ *
+ * @retval STATUS_OK            *date is valid.
+ * @retval STATUS_NULL_POINTER  date was NULL.
+ * @retval STATUS_INVALID_VALUE `time()` or `localtime()`
+ *                              failed (unable to obtain the date).
+ */
 Status DateProvider_Read(DateData* date);
 
 #ifdef __cplusplus

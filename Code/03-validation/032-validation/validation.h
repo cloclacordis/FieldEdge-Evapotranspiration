@@ -11,17 +11,48 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-/* Temporary protective corridor for temperature values */
+/**
+ * @brief Checks whether a value is within the accepted
+ *        air-temperature range.
+ *
+ * @param[in] value Candidate temperature [C].
+ *
+ * @return true iff isfinite(value) && -100.0 <= value <= 100.0.
+ *
+ * @note The range is a temporary protective corridor, not a
+ *       climate-derived bound.
+ */
 bool ValidTemperatureC(double value);
 
-/* Relative humidity as measured; true iff isfinite(value) && 0 <= value <= 100 */
+/**
+ * @brief Checks whether a value is a valid relative humidity.
+ *
+ * @param[in] value Candidate relative humidity [%].
+ *
+ * @return true iff isfinite(value) && 0.0 <= value <= 100.0.
+ */
 bool ValidHumidityPercent(double value);
 
-/* Range covers the entire Earth; poles are intentionally included *** * ** *** * * *** *** *** */
-bool ValidLatitudeRad(double phi);  /* true iff isfinite(phi) && phi >= -(π/2) && phi <= +(π/2) */
+/**
+ * @brief Checks whether a value is a valid latitude, in radians.
+ *
+ * @param[in] phi Candidate latitude [rad].
+ *
+ * @return true iff isfinite(phi) && -pi/2 <= phi <= +pi/2. The full
+ *         range, including the poles, is intentionally accepted.
+ */
+bool ValidLatitudeRad(double phi);
 
-/* Leap year: 366 is allowed; year validation is outside the scope of this function */
-bool ValidDayOfYear(uint16_t J);    /* true iff J >= 1 && J <= 366 *** * ** *** * * */
+/**
+ * @brief Checks whether a value is a valid day-of-year value.
+ *
+ * @param[in] J Candidate day of year.
+ *
+ * @return true iff 1 <= J <= 366. 366 is always accepted.
+ *         Whether the year associated with J is a leap year
+ *         is outside the scope of this function.
+ */
+bool ValidDayOfYear(uint16_t J);
 
 #ifdef __cplusplus
 }

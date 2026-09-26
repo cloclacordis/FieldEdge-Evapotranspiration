@@ -27,7 +27,7 @@ extern "C" {
 #define STEFAN_BOLTZMANN (4.903e-9)
 
 /* *** * * * ***** * * * **** * * **** * ** * **** * ***** * *** * * ***
- * C -> K conversion (FAO56 uses 273.16; see 1998: 52, eq. 39
+ * C -> K conversion (FAO-56 uses 273.16; see p. 52, eq. 39
  * * * * * * **** *** ** *** * ** **** * * *** **** * *** * * * * **** */
 #define CELSIUS_TO_KELVIN (273.16)
 
@@ -39,20 +39,51 @@ typedef struct {
     bool   initialized;    /* Structure initialized *** * * *** * * ** */
 } NetRadiationData;
 
-/* Initialize structure */
+/**
+ * @brief Initializes net radiation data to a safe zero state.
+ *
+ * Unlike the "Layer state" Init functions, also sets
+ * `.initialized = true` immediately.
+ *
+ * @param[out] data Pointer to the NetRadiationData structure to
+ *                  initialize. Must not be NULL.
+ *
+ * @retval STATUS_OK           Initialization succeeded.
+ * @retval STATUS_NULL_POINTER data was NULL.
+ */
 Status NetRadiation_Init(NetRadiationData *data);
 
-/* Compute net radiation:
- * - eq. 38: Rns = (1 - α) * Rs;
- * - eq. 39: Rnl = σ * [(Tmax,K⁴ + Tmin,K⁴) / 2] *
- *                 (0.34 - 0.14√ea) * (1.35 * Rs / Rso - 0.35);
- * - eq. 40: Rn  = Rns - Rnl.
+/**
+ * @brief Computes daily net radiation (FAO-56, eq. 38-40).
  *
- * Edge cases:
- * - Rs/Rso is capped at 1.0 (FAO56 requirement);
- * - when Rso = 0 (polar night): Rs/Rso = 0, division by zero is avoided;
- * - cloudiness factor is bounded below by 0, because under very overcast skies
- *   (Rs/Rso < 0.26) the factor would become negative; thus Rnl < 0 physically incorrect */
+ * Eq. 38: Rns = (1 - α) * Rs, α = 0.23 for hypothetical grass cover.
+ * Eq. 39: Rnl = sigma * [(Tmax,K^4 + Tmin,K^4) / 2]
+ *         * (0.34 - 0.14 * sqrt(ea)) * (1.35 * Rs/Rso - 0.35).
+ * Eq. 40: Rn  = Rns - Rnl.
+ *
+ * T is converted to Kelvin with FAO-56's eq. 39 constant, 273.16
+ * (not 273.15). Rs/Rso is clamped to <= 1.0 and computed as 0
+ * (not a division by zero) when Rso = 0 (polar night).
+ * The cloudiness factor `1.35 * Rs/Rso - 0.35` is clamped to >= 0,
+ * since a very overcast sky would otherwise make it negative,
+ * which is not physically meaningful for Rnl.
+ *
+ * @param[out] out    Destination for the result; must already be
+ *                    initialized. Must not be NULL.
+ * @param[in]  temp   Accumulated daily temperature data. Must not be
+ *                    NULL; `.initialized` true.
+ * @param[in]  solar  Solar radiation data. Must not be NULL;
+ *                    `.initialized` true, Rs_daily/Rso_daily >= 0.
+ * @param[in]  ea_kPa Actual vapour pressure [kPa]. Must be finite
+ *                    and >= 0.
+ *
+ * @retval STATUS_OK            out->Rns_daily, out->Rnl_daily,
+ *                              out->Rn_daily are valid.
+ * @retval STATUS_NULL_POINTER  out, temp, or solar was NULL.
+ * @retval STATUS_INVALID_VALUE Any structure not initialized, ea_kPa
+ *                              out of range, Rs_daily/Rso_daily
+ *                              negative, or a result was non-finite.
+ */
 Status Calc_NetRadiation(NetRadiationData *out,
     const AirTemperatureData *temp, const SolarRadiationData *solar, double ea_kPa);
 

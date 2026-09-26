@@ -4,8 +4,21 @@
 #include <stddef.h>
 #include "sunshine-lux-calc.h"
 
-/* Helper function; binary decision: sample is bright or not;
- * threshold comparison logic can be modified in one place (e.g., for calibration or adding hysteresis) */
+/**
+ * @brief Classifies one illuminance sample as bright or not.
+ *
+ * Internal to this file; no NULL check on @p data - callers within
+ * this file only invoke it with an already-validated pointer. The
+ * comparison logic lives in exactly one place so that a future
+ * calibration change (e.g. hysteresis) touches only this function.
+ *
+ * @param[in] data Accumulator holding the configured threshold.
+ * @param[in] lux  Sample to classify [lux].
+ *
+ * @return true iff `lux >= data->threshold_lux`.
+ *
+ * @note   On the illuminance threshold, see illuminance-proxy.md.
+ */
 static bool SunshineLux_IsBright(const SunshineLuxData* data, const double lux) {
     return lux >= data->threshold_lux;
 }

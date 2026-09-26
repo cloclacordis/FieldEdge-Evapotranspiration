@@ -6,12 +6,11 @@
 #include "wind-speed-read.h"
 #include "../../02-providers/022-configurations/deployment-config.h"
 
-/* PC mock: speed 3.2 m/s (ex. 14), measurement height 10 m - from deployment-config.h */
+/* PC mock: speed 3.2 m/s (ex. 14), measurement height 10 m */
 #define SENSOR_MOCK_WIND_SPEED_MS     (3.2)
 
 /* Fallback values: speed 2.4 m/s (ex. 14), measurement height 2 m */
 #define SENSOR_DEFAULT_WIND_SPEED_MS  (2.4)
-#define SENSOR_DEFAULT_WIND_HEIGHT_M  (2.0)    /* Matches deployment CONFIG_WIND_HEIGHT_FAO_M */
 #define SENSOR_WIND_DEFAULT_TIMESTAMP (0U)
 
 Status SensorWindSpeed_ReadInstant(WindSpeedSample *out_sample) {
@@ -20,7 +19,7 @@ Status SensorWindSpeed_ReadInstant(WindSpeedSample *out_sample) {
     }
 
     out_sample->speed_m_s = SENSOR_MOCK_WIND_SPEED_MS;
-    out_sample->height_m  = CONFIG_WIND_HEIGHT_WMO_M;
+    out_sample->height_m  = CONFIG_WIND_HEIGHT_WMO_M;   /* WMO standard: 10 m (standard meteorological stations) */
     out_sample->timestamp = (uint32_t)time(NULL);
     out_sample->source    = SENSOR_VALUE_MEASURED;
 
@@ -33,7 +32,7 @@ Status SensorWindSpeed_ReadDefault(WindSpeedSample *out_sample) {
     }
 
     out_sample->speed_m_s = SENSOR_DEFAULT_WIND_SPEED_MS;
-    out_sample->height_m  = SENSOR_DEFAULT_WIND_HEIGHT_M;
+    out_sample->height_m  = CONFIG_WIND_HEIGHT_FAO_M;   /* FAO56 standard: 2 m (agrometeorological stations) ** **/
     out_sample->timestamp = SENSOR_WIND_DEFAULT_TIMESTAMP;
     out_sample->source    = SENSOR_VALUE_DEFAULT;
 

@@ -19,10 +19,35 @@ typedef struct {
     SensorValueSource source;
 } TemperatureSample;
 
-/* Emulate instant air temperature reading */
+/**
+ * @brief Reads an instantaneous air temperature value from the sensor.
+ *
+ * PC-mock implementation: always returns a fixed value
+ * (SENSOR_MOCK_INSTANT_C) with a live timestamp; fails only on a
+ * NULL pointer. A real sensor driver will fail for other reasons too.
+ *
+ * @param[out] out_sample Destination for the reading. Must not be NULL.
+ *
+ * @retval STATUS_OK           *out_sample is valid; `.source` is
+ *                             SENSOR_VALUE_MEASURED.
+ * @retval STATUS_NULL_POINTER out_sample was NULL.
+ *
+ * @note Pairs with SensorTemperature_ReadDefault(), the fallback used
+ *       by RunDailyCycle() when this call does not return STATUS_OK.
+ */
 Status SensorTemperature_ReadInstant(TemperatureSample* out_sample);
 
-/* Default (fallback) value: if measurement is unavailable or data is corrupted */
+/**
+ * @brief Returns the fallback air temperature reading.
+ *
+ * Fixed value (SENSOR_DEFAULT_INSTANT_C), zero timestamp, `.source`
+ * set to SENSOR_VALUE_DEFAULT.
+ *
+ * @param[out] out_sample Destination for the reading. Must not be NULL.
+ *
+ * @retval STATUS_OK           *out_sample is valid.
+ * @retval STATUS_NULL_POINTER out_sample was NULL.
+ */
 Status SensorTemperature_ReadDefault(TemperatureSample* out_sample);
 
 #ifdef __cplusplus

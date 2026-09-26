@@ -10,16 +10,29 @@ extern "C" {
 
 #include "../../03-validation/033-status/status.h"
 
-/* **** * * * **** * ** * *** * * * * *** * * * ****** * * * *** * *** * * * * * *
- * Model-based atmospheric pressure calculation from elevation above sea level.
- * FAO56 eq. 7: P = 101.3 * [(293 - 0.0065z) / 293]^5.26
+/**
+ * @brief Estimates atmospheric pressure from elevation (FAO-56, eq. 7).
  *
- * Used as fallback when barometric sensor is unavailable.
- * FAO56: "The effect is, however, small and in the calculation procedures,
- *         the average value for a location is sufficient."
- * ** * * * * * *** * ** * ** ***   ** ** * * * ** *** * * *** * **** * ** * *** */
-
-/* Eq. 7: atmospheric pressure as a function of elevation [m] */
+ * P = 101.3 * [(293 - 0.0065 * z) / 293]^5.26.
+ *
+ * Used as the second-priority fallback (after the sensor, before the
+ * fixed constant) when the pressure sensor is unavailable - see
+ * data-flow-specification.md.
+ *
+ * @param[in]  elevation_m Station elevation above sea level [m].
+ *                         Must be in [-500, 6000].
+ * @param[out] P_kPa       Destination for the result [kPa]. Must
+ *                         not be NULL.
+ *
+ * @retval STATUS_OK            *P_kPa is valid.
+ * @retval STATUS_NULL_POINTER  P_kPa was NULL.
+ * @retval STATUS_INVALID_VALUE elevation_m out of range, or the
+ *                              result was non-finite or non-positive.
+ *
+ * @note "The effect is, however, small and in the calculation
+ *       procedures, the average value for a location is sufficient"
+ *       (FAO-56, p. 31).
+ */
 Status Calc_PressureFromElevation(double elevation_m, double *P_kPa);
 
 #ifdef __cplusplus

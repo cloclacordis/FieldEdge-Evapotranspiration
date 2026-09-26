@@ -13,10 +13,32 @@ extern "C" {
 #define DEG_TO_RAD  (PI / 180.0)
 #define RAD_TO_DEG  (180.0 / PI)
 
+/**
+ * @brief Returns the smaller of two values.
+ *
+ * @param[in] a First value.
+ * @param[in] b Second value.
+ *
+ * @return a if a < b, otherwise b. No special NaN handling: if either
+ *         input is NaN, the comparison is false and b is returned.
+ *         Thus, (NaN, b) returns b, while (a, NaN) returns NaN.
+ *         NaN in a is discarded, whereas NaN in b propagates.
+ */
 static inline double Min(const double a, const double b) {
     return (a < b) ? a : b;
 }
 
+/**
+ * @brief Returns the larger of two values.
+ *
+ * @param[in] a First value.
+ * @param[in] b Second value.
+ *
+ * @return a if a > b, otherwise b. No special NaN handling: if either
+ *         input is NaN, the comparison is false and b is returned.
+ *         Thus, (NaN, b) returns b, while (a, NaN) returns NaN.
+ *         NaN in a is discarded, whereas NaN in b propagates.
+ */
 static inline double Max(const double a, const double b) {
     return (a > b) ? a : b;
 }

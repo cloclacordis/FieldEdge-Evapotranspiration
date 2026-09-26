@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include "atm-pressure-read.h"
 
-/* Mock: sea-level pressure */
+/* PC mock */
 #define SENSOR_MOCK_P_KPA                 (101.3)
-#define SENSOR_DEFAULT_P_KPA              (101.3)
+#define SENSOR_DEFAULT_P_KPA              (101.3)  /* Standard sea-level pressure */
 #define SENSOR_PRESSURE_DEFAULT_TIMESTAMP (0U)
 
 Status SensorPressure_ReadInstant(AtmPressureSample *out_sample) {

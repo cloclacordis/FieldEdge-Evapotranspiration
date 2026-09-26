@@ -387,15 +387,17 @@ void PrintTrace(const DailyCycleTrace *trace) {
     }
 }
 
-/* Formatting helpers for PrintReport() */
+/* *** Formatting helpers for PrintReport() *** */
 static const int  COL_W  = 38;      /* Label column width  */
 static const char *SEP   = " = ";
 static const int  VAL_W  = 12;      /* Numeric field width */
 
+/** @internal @brief Prints a section header (`=== title ===`) to stdout. */
 static void PrintSectionHeader(const char *title) {
     (void)printf("\n=== %s ===\n", title);
 }
 
+/** @internal @brief Prints one label/value/unit row to stdout, right-aligned. */
 static void PrintLabeledDouble(const char *label, const double value,
     const int precision, const char *unit, const int unit_width) {
     if (unit != NULL) {
@@ -407,6 +409,7 @@ static void PrintLabeledDouble(const char *label, const double value,
     }
 }
 
+/** @internal @brief Prints one label/value/unit row to stdout, for an unsigned integer. */
 static void PrintLabeledUint(const char *label, const unsigned int value,
     const char *unit, const int unit_width) {
     if (unit != NULL) {
