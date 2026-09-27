@@ -1,6 +1,6 @@
 # FieldEdge-Evapotranspiration
 
-[![CI](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml) [![Docs](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/docs.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/docs.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## About
 
@@ -95,8 +95,8 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. This decision will be revisited when real timing data from the MCU port is available.  
-* The illuminance-based sunshine-duration threshold is a preliminary estimate, not yet empirically calibrated against real hardware — planned for the sensor-driver development stage.  
-* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Proper estimation is planned alongside real sensor-driver development in v0.2.x, where the required cross-channel data access will exist “naturally”.
+* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Proper estimation is planned alongside real sensor-driver development in v0.2.x, where the required cross-channel data access will exist “naturally”.  
+* The illuminance-based sunshine-duration threshold is an uncalibrated placeholder for WMO’s radiometric [`definition`](https://library.wmo.int/idviewer/68695/358) of sunshine duration — lux and W/m^2 are different physical quantities. This is a known, bounded gap: low-cost proxy sensors have published precedent in agricultural/meteorological IoT, and an experimental fix — a dynamic, astronomy-aware threshold with a calibrated algorithm — is planned for v0.2.x. In addition, swapping in a pyranometer requires no change to the calculation layer.
 
 Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
 
@@ -108,14 +108,14 @@ Only [`Code/01-measurement`](Code/01-measurement) needs replacing for new hardwa
 
 * * *
 
-## Documentation (in progress)
+## Documentation
 
 * [`System context diagram`](Docs/system-context-diagram.md).  
 * [`Software architecture diagram`](Docs/software-architecture-diagram.md).  
 * [`Verified call graph`](Docs/verified-call-graph.md).  
 * [`Data flow specification`](Docs/data-flow-specification.md).  
 * [`Contracts and conventions`](Docs/contracts-and-conventions.md).  
-* `Doxygen source documentation` (link to be added).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
 
 * * *

@@ -1,6 +1,6 @@
 # devlog19. Дополнительные проверки и документация *v0.1.0* (обновляется)
 
-*Adds Valgrind memory checks, introduces optional AddressSanitizer and UndefinedBehaviorSanitizer builds via a dedicated `ENABLE_SANITIZERS` CMake option. Verifies the sanitizer configuration, confirms that all 58 tests pass without sanitizer errors, and validates the actual compile and link flags with a verbose `fao56_test` build. Extends CI with a dedicated sanitizer job that configures, builds, and runs the test suite with CTest. The devlog will be updated with the software architecture documentation and related supporting documents.*
+*Adds Valgrind memory checks, introduces optional `AddressSanitizer` and `UndefinedBehaviorSanitizer` builds via a dedicated `ENABLE_SANITIZERS` CMake option. Verifies the sanitizer configuration, confirms that all 58 tests pass without sanitizer errors, and validates the actual compile and link flags with a verbose `fao56_test` build. Extends CI with a dedicated sanitizer job that configures, builds, and runs the test suite with CTest. The devlog has been updated with the software architecture documentation and related documents.*
 
 * * *
 
@@ -341,7 +341,7 @@ flowchart TB
     Providers --> Validation
 ```
 
-**Note.** For dependencies between individual functions, types, and modules, see the Doxygen reference (a link will be added later).
+**Note.** For dependencies between individual functions, types, and modules, see [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
 
 * * *
 
@@ -702,3 +702,55 @@ flowchart LR
 ```
 
 **Note.** The `trace` is omitted from the diagram — it is written by nearly every step.
+
+* * *
+
+### Документация контрактов и соглашений
+
+Выполнена документация контрактов функций (публичных и некоторых выспомогательных/`static`) и некоторых соглашений:
+
+- написаны комментарии к файлам исходного кода в формате *doxygen*;  
+- эти же комментарии с описанием соглашений размещены в отдельном файле [`contracts-and-conventions.md`](../../contracts-and-conventions.md); файл слишком пространный, чтобы приводить здесь его содержимое;  
+- на основе комментариев создано *html* представление документации исходного кода, [*`github pages`*](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
+
+Отобразим здесь содержимое файла, который запускает автоматизацию этого *html* представления, а именно: `.github/workflows/docs.yml`:
+
+```yaml
+name: Docs
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doxygen and Graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      - name: Generate documentation
+        run: doxygen Doxyfile
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: Docs/Generated/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+> Кроме того, в корень проекта был добавлен `Doxyfile`, а в `.gitignor` было добавлено исключение `Docs/Generated/` - каталог для генерируемой документации *Doxygen*.

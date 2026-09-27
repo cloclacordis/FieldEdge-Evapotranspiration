@@ -31,11 +31,19 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 * * *
 
+## 4. `CONFIG_BRIGHT_LUX_THRESHOLD` is an uncalibrated proxy for a different physical quantity
+
+* Location: `Code/02-providers/022-configurations/deployment-config.h`; consumed by `SolarRadiation_Calc()` via `SunshineLux_*`.  
+* Illuminance (lux) is not the radiometric quantity (W/m^2) WMO’s sunshine-duration [`definition`](https://library.wmo.int/idviewer/68695/358) uses. Known, documented gap, not an unexamined one — full analysis, citations, and current configuration in `illuminance-proxy.md` (link to be added).  
+* Status: open. A calibration experiment with two candidate algorithms (astronomy-aware dynamic threshold, variance-based discriminator) is in progress for v0.2.x.
+
+* * *
+
 ## Related documents
 
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* `Doxygen source documentation` (link to be added).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`README`](../README.md).

@@ -10,7 +10,7 @@ Verification basis:
 * Dynamic call order — a GDB-assisted execution trace, breakpointed at `RunDailyCycle()` entry and single-stepped to process exit, using a build with mocked/emulated sensor backends (host execution, not target hardware, for v0.1.x).
 
 The two sources agree exactly on the call order for every step listed below.  
-See also the `Doxygen source documentation` (link to be added).
+See also [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
 
 This document covers the happy path only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises error-path scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document; it will be addressed in a future revision.
 
@@ -140,5 +140,5 @@ Present in source, not exercised in the recorded happy path trace:
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* `Doxygen source documentation` (link to be added).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
 * [`Issues v0.1.x`](issues-v01x.md).
