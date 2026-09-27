@@ -31,3 +31,6 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Doxygen
+Docs/Generated/
