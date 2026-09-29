@@ -121,4 +121,5 @@ A view of the same data flow, grouped by the categories defined in “Data model
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
 * [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Illuminance as a proxy`](illuminance-proxy.md).  
 * [`Issues v0.1.x`](issues-v01x.md).

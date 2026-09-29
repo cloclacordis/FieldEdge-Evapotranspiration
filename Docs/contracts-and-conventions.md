@@ -1339,4 +1339,5 @@ int main(void);
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Illuminance as a proxy`](illuminance-proxy.md).  
 * [`Issues v0.1.x`](issues-v01x.md).
