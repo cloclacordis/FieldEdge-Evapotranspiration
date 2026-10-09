@@ -1,10 +1,11 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-#include <time.h>
+// #include <time.h>
 #include <stddef.h>
 #include "wind-speed-read.h"
 #include "../../02-providers/022-configurations/deployment-config.h"
+#include "../../02-providers/021-date-provider/time-provider.h"
 
 /* PC mock: speed 3.2 m/s (ex. 14), measurement height 10 m */
 #define SENSOR_MOCK_WIND_SPEED_MS     (3.2)
@@ -20,7 +21,15 @@ Status SensorWindSpeed_ReadInstant(WindSpeedSample *out_sample) {
 
     out_sample->speed_m_s = SENSOR_MOCK_WIND_SPEED_MS;
     out_sample->height_m  = CONFIG_WIND_HEIGHT_WMO_M;   /* WMO standard: 10 m (standard meteorological stations) */
-    out_sample->timestamp = (uint32_t)time(NULL);
+
+    // out_sample->timestamp = (uint32_t)time(NULL);
+
+    /* Smoke-test timestamp */
+    Status status = TimeProvider_Read(&out_sample->timestamp);
+    if (status != STATUS_OK) {
+        return status;
+    }
+
     out_sample->source    = SENSOR_VALUE_MEASURED;
 
     return STATUS_OK;
