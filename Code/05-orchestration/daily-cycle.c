@@ -344,31 +344,31 @@ Status RunDailyCycle(DailyResults *out, const char **out_failed_step) {
 void PrintTrace(const DailyCycleTrace *trace) {
     if (trace->temperature_read_status != STATUS_OK) {
         (void)fprintf(stderr,
-            "No air temperature data, using default value. Reason: %s\r\n",
+            "No air temperature data, using default value. Reason: %s\n",
             Status_ToString(trace->temperature_read_status));
     }
 
     if (trace->humidity_read_status != STATUS_OK) {
         (void)fprintf(stderr,
-            "No air humidity data, using default value. Reason: %s\r\n",
+            "No air humidity data, using default value. Reason: %s\n",
             Status_ToString(trace->humidity_read_status));
     }
 
     if (trace->pressure_read_status != STATUS_OK) {
         (void)fprintf(stderr,
-            "Pressure sensor unavailable (%s). Using eq.7 model.\r\n",
+            "Pressure sensor unavailable (%s). Using eq.7 model.\n",
             Status_ToString(trace->pressure_read_status));
 
         if (trace->pressure_model_status != STATUS_OK) {
             (void)fprintf(stderr,
-                "Eq. 7 model unavailable (%s). Using constant.\r\n",
+                "Eq. 7 model unavailable (%s). Using constant.\n",
                 Status_ToString(trace->pressure_model_status));
         }
     }
 
     if (trace->wind_read_status != STATUS_OK) {
         (void)fprintf(stderr,
-            "No wind speed data, using default value. Reason: %s\r\n",
+            "No wind speed data, using default value. Reason: %s\n",
             Status_ToString(trace->wind_read_status));
     }
 
@@ -377,11 +377,11 @@ void PrintTrace(const DailyCycleTrace *trace) {
 
         if (lux_trace->read_status != STATUS_OK) {
             (void)fprintf(stderr,
-                "No illuminance data, using default value. Reason: %s\r\n",
+                "No illuminance data, using default value. Reason: %s\n",
                 Status_ToString(lux_trace->read_status));
         }
 
-        (void)printf("lux[%02u] = %.0f, source = %s\r\n",
+        (void)printf("lux[%02u] = %.0f, source = %s\n",
             (unsigned)i, lux_trace->sample.lux,
             SensorValueSource_ToString(lux_trace->sample.source));
     }
@@ -394,17 +394,17 @@ static const int  VAL_W  = 12;      /* Numeric field width */
 
 /** @internal @brief Prints a section header (`=== title ===`) to stdout. */
 static void PrintSectionHeader(const char *title) {
-    (void)printf("\r\n=== %s ===\r\n", title);
+    (void)printf("\n=== %s ===\n", title);
 }
 
 /** @internal @brief Prints one label/value/unit row to stdout, right-aligned. */
 static void PrintLabeledDouble(const char *label, const double value,
     const int precision, const char *unit, const int unit_width) {
     if (unit != NULL) {
-        (void)printf("%-*s%s%*.*f %-*s\r\n",
+        (void)printf("%-*s%s%*.*f %-*s\n",
             COL_W, label, SEP, VAL_W, precision, value, unit_width, unit);
     } else {
-        (void)printf("%-*s%s%*.*f\r\n",
+        (void)printf("%-*s%s%*.*f\n",
             COL_W, label, SEP, VAL_W, precision, value);
     }
 }
@@ -413,10 +413,10 @@ static void PrintLabeledDouble(const char *label, const double value,
 static void PrintLabeledUint(const char *label, const unsigned int value,
     const char *unit, const int unit_width) {
     if (unit != NULL) {
-        (void)printf("%-*s%s%*u %-*s\r\n",
+        (void)printf("%-*s%s%*u %-*s\n",
             COL_W, label, SEP, VAL_W, value, unit_width, unit);
     } else {
-        (void)printf("%-*s%s%*u\r\n",
+        (void)printf("%-*s%s%*u\n",
             COL_W, label, SEP, VAL_W, value);
     }
 }
@@ -429,9 +429,9 @@ void PrintReport(const DailyResults *results) {
 
     /* Data sources */
     PrintSectionHeader("Data sources");
-    (void)printf("%-*s%s%s\r\n", COL_W, "Air temperature",
+    (void)printf("%-*s%s%s\n", COL_W, "Air temperature",
         SEP, SensorValueSource_ToString(results->t_sample.source));
-    (void)printf("%-*s%s%s\r\n", COL_W, "Illuminance (daily data)",
+    (void)printf("%-*s%s%s\n", COL_W, "Illuminance (daily data)",
         SEP, SensorValueSource_ToString(results->sunshine_data.source));
 
     /* Air temperature & saturation vapour pressure */
@@ -445,7 +445,7 @@ void PrintReport(const DailyResults *results) {
 
     /* Atmospheric parameters */
     PrintSectionHeader("Atmospheric parameters");
-    (void)printf("%-*s%s%12.2f kPa (source: %s)\r\n", COL_W, "P", SEP, results->atmos_data.P_kPa,
+    (void)printf("%-*s%s%12.2f kPa (source: %s)\n", COL_W, "P", SEP, results->atmos_data.P_kPa,
         (results->pressure_sample.source == SENSOR_VALUE_MEASURED) ? "sensor" : "model/constant");
 
     PrintLabeledDouble("gamma", results->atmos_data.gamma_kPa_per_C, 5, "kPa/C", 6);
@@ -455,19 +455,19 @@ void PrintReport(const DailyResults *results) {
 
     /* Wind speed */
     PrintSectionHeader("Wind speed");
-    (void)printf("%-*s%s%s\r\n", COL_W, "Source", SEP, SensorValueSource_ToString(results->wind_sample.source));
+    (void)printf("%-*s%s%s\n", COL_W, "Source", SEP, SensorValueSource_ToString(results->wind_sample.source));
     PrintLabeledDouble("Anemometer height (z)", results->wind_data.height_m, 1, "m", 6);
     PrintLabeledDouble("uzmean", results->wind_data.u_z_mean_m_s, 2, "m/s", 6);
     PrintLabeledDouble("u2 (eq. 47)", results->u2, 2, "m/s", 6);
 
     /* Astronomy */
-    (void)printf("\r\n=== Astronomy, at J = %u, phi = %.4f rad = %.2f deg ===\r\n",
+    (void)printf("\n=== Astronomy, at J = %u, phi = %.4f rad = %.2f deg ===\n",
         results->day_data.J, results->location.latitude_rad, results->location.latitude_rad * RAD_TO_DEG);
 
     PrintLabeledUint("Current day of year (J)", results->current_j, NULL, 0);
     PrintLabeledDouble("Inverse relative distance", results->day_data.dr, 4, NULL, 0);
 
-    (void)printf("%-*s%s%12.4f rad (%6.2f deg)\r\n", COL_W, "Solar declination",
+    (void)printf("%-*s%s%12.4f rad (%6.2f deg)\n", COL_W, "Solar declination",
         SEP, results->day_data.delta_rad, results->day_data.delta_rad * RAD_TO_DEG);
 
     PrintLabeledDouble("Sunset hour angle", results->day_data.omega_s_rad, 4, "rad", 3);

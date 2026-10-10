@@ -3,6 +3,7 @@
 /Debug/
 /Release/
 /cmake-build-*/
+build-mcu/
 
 # STM32CubeIDE
 .settings/

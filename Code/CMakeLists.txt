@@ -28,9 +28,6 @@ set(FAO56_SOURCES
 
         02-providers/021-date-provider/date-provider.c
         02-providers/021-date-provider/date-provider.h
-        
-        02-providers/021-date-provider/time-provider.c
-        02-providers/021-date-provider/time-provider.h
 
         02-providers/022-configurations/deployment-config.h
 

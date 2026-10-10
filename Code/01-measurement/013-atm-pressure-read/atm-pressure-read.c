@@ -1,10 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-// #include <time.h>
+#include <time.h>
 #include <stddef.h>
 #include "atm-pressure-read.h"
-#include "../../02-providers/021-date-provider/time-provider.h"
 
 /* PC mock */
 #define SENSOR_MOCK_P_KPA                 (101.3)
@@ -17,15 +16,7 @@ Status SensorPressure_ReadInstant(AtmPressureSample *out_sample) {
     }
 
     out_sample->P_kPa     = SENSOR_MOCK_P_KPA;
-
-    // out_sample->timestamp = (uint32_t)time(NULL);
-
-    /* Smoke-test timestamp */
-    Status status = TimeProvider_Read(&out_sample->timestamp);
-    if (status != STATUS_OK) {
-        return status;
-    }
-
+    out_sample->timestamp = (uint32_t)time(NULL);
     out_sample->source    = SENSOR_VALUE_MEASURED;
 
     return STATUS_OK;
