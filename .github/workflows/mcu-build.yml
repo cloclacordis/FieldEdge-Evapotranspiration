@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi \
-            libnewlib-arm-none-eabi libnewlib-nano-arm-none-eabi
+            libnewlib-arm-none-eabi
 
       - name: Configure STM32 target
         run: cmake -S Port/STM32F446RE -B build-mcu -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
