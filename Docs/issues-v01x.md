@@ -17,9 +17,9 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 ## 2. `double` precision margin relative to the target FPU
 
-* Location: throughout `Code/04-calculation`.  
-* Already tracked in the `README`’s “Limitations and open questions of v0.1.x” as a deliberate, revisit-later decision. Added here as supporting evidence: the existing tolerances, e.g. `TOL_KPA = 0.0001` in `Code/06-test/test-config.h`, are broadly compatible with the numerical resolution of single-precision float for values in the expected operating range. Since the STM32’s Cortex-M4F provides a single-precision FPv4-SP FPU, this supports the feasibility of a future float migration, but the migration should still be validated against actual value ranges and accumulated numerical error.  
-* Status: open, per `README`, pending real data from the MCU port.
+* Location: throughout `Code/`.  
+* First measurement on target: one full `RunDailyCycle()` on an STM32F446RE at 16 MHz took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build). With a daily cadence this does not justify a `float` migration on performance grounds.  
+* Status: open. The remaining questions are code size, portability to targets without an FPU, and a comparison with a `float` build; see [`devlog20`](Devjournal/Devlogs/devlog20-mcu-smoke-test.md).
 
 * * *
 
@@ -27,7 +27,8 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 * Location: `Code/02-providers/021-date-provider/date-provider.c`.  
 * `localtime()` resolves the current date using the host’s/runtime’s configured local time zone. Day-of-year and solar declination calculations are date-sensitive at the midnight boundary.  
-* Status: open design question for the RTC-based replacement planned for v0.2.x. The time-base semantics (UTC vs. local time, and any required time-zone/DST handling) should be defined explicitly rather than relying on host-runtime time-zone configuration that will not be implicitly available on the MCU.
+* Status: open design question for the RTC-based replacement planned for v0.2.x. The time-base semantics (UTC vs. local time, and any required time-zone/DST handling) should be defined explicitly rather than relying on host-runtime time-zone configuration that will not be implicitly available on the MCU.  
+* The v0.2-dev smoke test uses a fixed date; this does not resolve the question above.
 
 * * *
 

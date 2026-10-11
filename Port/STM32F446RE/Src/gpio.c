@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-#include "../Inc/gpio.h"
+#include "gpio.h"
 
 #define GPIOAEN  (1U << 0)
 #define GPIOCEN  (1U << 2)

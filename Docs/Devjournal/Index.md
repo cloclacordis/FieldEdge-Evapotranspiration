@@ -21,6 +21,7 @@
 | 17 | Summarizing v0.1.0 | Status snapshot: 53 tests, coverage table, roadmap to MCU port. |
 | 18 | Improvements to v0.1.0 | Hardening: compiler warnings, `NaN` checks, `main.c`/`daily-cycle.c` split, 58 tests, `cppcheck`. |
 | 19 | New Checks & Documentation | Adds Valgrind and sanitizer checks, dedicated CI job, and v0.1.0 architecture documentation. |
+| 20 | Smoke Testing | First run of the calculation kernel on real hardware. |
 
 * * *
 
@@ -137,3 +138,9 @@ Hardening pass. Enables stricter compiler warnings (`-Wall -Wextra -Wpedantic -W
 ### devlog19 — New Checks & v0.1.0 Documentation
 
 Adds Valgrind memory checks, introduces optional `AddressSanitizer` and `UndefinedBehaviorSanitizer` builds via a dedicated `ENABLE_SANITIZERS` CMake option. Verifies the sanitizer configuration, confirms that all 58 tests pass without sanitizer errors, and validates the actual compile and link flags with a verbose `fao56_test` build. Extends CI with a dedicated sanitizer job that configures, builds, and runs the test suite with CTest. The devlog has been updated with the software architecture documentation and related documents.
+
+* * *
+
+### devlog20 — Preparing project for porting, smoke testing
+
+First run of the calculation kernel on real hardware (STM32F446RET6 Nucleo-64, Cortex-M4F). Describes the minimal platform layer, a new `fao56_mcu` CMake target cross-compiled with `arm-none-eabi-gcc` through a toolchain file (with CI building the firmware), and flashing/debugging with OpenOCD and GDB.

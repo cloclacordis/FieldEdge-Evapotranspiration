@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include "../CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+#include "stm32f4xx.h"
 
 void LD_Init(void);
 void LD_On(void);

@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include "../CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+#include "stm32f4xx.h"
 void UART_Init(void);
 
 #ifdef __cplusplus

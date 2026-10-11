@@ -1,4 +1,4 @@
-# devlog19. Дополнительные проверки и документация *v0.1.0* (обновляется)
+# devlog19. Дополнительные проверки и документация *v0.1.0*
 
 *Adds Valgrind memory checks, introduces optional `AddressSanitizer` and `UndefinedBehaviorSanitizer` builds via a dedicated `ENABLE_SANITIZERS` CMake option. Verifies the sanitizer configuration, confirms that all 58 tests pass without sanitizer errors, and validates the actual compile and link flags with a verbose `fao56_test` build. Extends CI with a dedicated sanitizer job that configures, builds, and runs the test suite with CTest. The devlog has been updated with the software architecture documentation and related documents.*
 

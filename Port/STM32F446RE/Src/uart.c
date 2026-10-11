@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
 #include <stdint.h>
-#include "../Inc/uart.h"
+#include "uart.h"
 
 #define GPIOAEN   (1U << 0)
 #define UART2EN   (1U << 17)
