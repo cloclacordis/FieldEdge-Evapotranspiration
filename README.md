@@ -40,7 +40,7 @@ cmake -S Port/STM32F446RE -B build-mcu
 cmake --build build-mcu
 ```
 
-Flashing and debugging with OpenOCD and GDB: [`Port/STM32F446RE/flashing-routine.md`](Port/STM32F446RE/flashing-routine.md).
+Flashing and debugging with OpenOCD and GDB: [`Port/flashing-routine.md`](Port/flashing-routine.md).
 
 * * *
 
