@@ -4,16 +4,9 @@
 #include <stdint.h>
 #include "uart.h"
 
-#define GPIOAEN   (1U << 0)
-#define UART2EN   (1U << 17)
-
 #define BAUDRATE  (115200)
 #define FREQ      (16000000)
 #define APB1_CLK  FREQ
-
-#define CR1_TE    (1U << 3)
-#define CR1_UE    (1U << 13)
-#define SR_TXE    (1U << 7)
 
 static void UART_SetBaudrate(uint32_t periph_clk, uint32_t baudrate);
 static void UART_Write(int ch);
@@ -28,7 +21,7 @@ int __io_putchar(int ch) {
 }
 
 void UART_Init(void) {
-    RCC->AHB1ENR  |=  GPIOAEN;
+    RCC->AHB1ENR  |=  RCC_AHB1ENR_GPIOAEN;
     GPIOA->MODER  &= ~(1U << 4);
     GPIOA->MODER  |=  (1U << 5);
     GPIOA->AFR[0] |=  (1U << 8);
@@ -36,14 +29,14 @@ void UART_Init(void) {
     GPIOA->AFR[0] |=  (1U << 10);
     GPIOA->AFR[0] &= ~(1U << 11);
 
-    RCC->APB1ENR  |=  UART2EN;
+    RCC->APB1ENR  |=  RCC_APB1ENR_USART2EN;
     UART_SetBaudrate(APB1_CLK, BAUDRATE);
-    USART2->CR1    =  CR1_TE;
-    USART2->CR1   |=  CR1_UE;
+    USART2->CR1    =  USART_CR1_TE;
+    USART2->CR1   |=  USART_CR1_UE;
 }
 
 static void UART_Write(int ch) {
-    while (!(USART2->SR & SR_TXE)) {}
+    while (!(USART2->SR & USART_SR_TXE)) {}
     USART2->DR = (ch & 0xFF);
 }
 
