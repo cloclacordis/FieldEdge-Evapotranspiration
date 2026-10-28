@@ -18,20 +18,20 @@ typedef struct {
 } DateData;
 
 /**
- * @brief Reads the current calendar date from the host system clock.
+ * @brief Reads the current calendar date for the configured station.
  *
- * Wraps time() and localtime(). Uses the host's configured local
- * time zone. This is a known open question for the RTC-based
- * replacement in v0.2.x (see README, "Limitations").
+ * The UTC timestamp comes from TimeProvider_ReadTimestamp(). The station date
+ * is derived using CONFIG_STATION_UTC_OFFSET_MIN; the host computer's time zone
+ * and daylight-saving rules do not affect the result.
  *
  * @param[out] date Destination for the date. Must not be NULL.
  *
  * @retval STATUS_OK            *date is valid.
  * @retval STATUS_NULL_POINTER  date was NULL.
- * @retval STATUS_INVALID_VALUE `time()` or `localtime()`
- *                              failed (unable to obtain the date).
+ * @retval STATUS_UNAVAILABLE   A trusted timestamp is not available.
+ * @retval STATUS_INVALID_VALUE The timestamp/offset could not be converted.
  */
-Status DateProvider_Read(DateData* date);
+Status DateProvider_Read(DateData *date);
 
 #ifdef __cplusplus
 }

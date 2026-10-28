@@ -26,6 +26,10 @@ file(GLOB_RECURSE FAO56_CORE_SOURCES CONFIGURE_DEPENDS
         "${CODE_DIR}/04-calculation/*.c"
 )
 list(APPEND FAO56_CORE_SOURCES "${CODE_DIR}/05-orchestration/daily-cycle.c")
+list(REMOVE_ITEM FAO56_CORE_SOURCES
+        "${CODE_DIR}/02-providers/023-time/time-provider-host.c"
+) # The host clock implementation is used only by Code's PC targets
+# # The MCU provides TimeProvider_ReadTimestamp() via platform-time.c
 
 set(MCU_CPU_FLAGS -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
 
@@ -44,6 +48,8 @@ add_executable(fao56_mcu
         "${PORT_DIR}/Src/main-mcu.c"
         "${PORT_DIR}/Src/gpio.c"
         "${PORT_DIR}/Src/uart.c"
+        "${PORT_DIR}/Src/rtc.c"
+        "${PORT_DIR}/Src/service-console.c"
         "${PORT_DIR}/Src/platform-time.c"
         "${PORT_DIR}/Src/syscalls.c"
         "${PORT_DIR}/Src/sysmem.c"

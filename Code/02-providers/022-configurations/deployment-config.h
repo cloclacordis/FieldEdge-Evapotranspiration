@@ -15,6 +15,11 @@ extern "C" {
 #define CONFIG_LATITUDE_MIN    (0.0)    /* FAO56, ex.8: 20°S, southern hemisphere ** * */
 #define CONFIG_ELEVATION_M     (0.0)    /* Sea level * ** *** * ** * *** * * ** *** ** */
 
+/* Fixed station standard-time offset from UTC, in minutes east of UTC;
+ * examples: UTC + 1 = 60, UTC - 5 = -300; daylight-saving changes are not applied;
+ * use the station standard offset for consistent 24-hour days *** * * * ******* ** ** */
+#define CONFIG_STATION_UTC_OFFSET_MIN (0)
+
 /* Illuminance threshold for binary sunshine counter *** * * ********* * * ***** * *** */
 #define CONFIG_BRIGHT_LUX_THRESHOLD (20000.0)  /* Uncalibrated proxy for WMO's 120 W/m^2
 direct-irradiance sunshine threshold - lux is a different,  global/photometric quantity;

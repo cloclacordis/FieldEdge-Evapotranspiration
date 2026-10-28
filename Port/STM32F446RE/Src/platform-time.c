@@ -1,23 +1,10 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
  * Copyright (C) 2026 Tim Alexeenko (@cloclacordis) */
 
-#include <stddef.h>
-#include <time.h>
-#include <errno.h>
-#include <sys/time.h>
+#include "rtc.h"
+#include "02-providers/023-time/time-provider.h"
 
-/* newlib time source for the STM32 smoke test */
-int _gettimeofday(struct timeval *tv, void *tz) {
-    (void)tz;
-
-    if (tv == NULL) {
-        errno = EINVAL;  /* Invalid argument */
-        return -1;
-    }
-
-    /* Smoke test only: 2026-10-08 12:00:00 UTC; replace with RTC later */
-    tv->tv_sec = (time_t)1791460800L;  /* Signed */
-    tv->tv_usec = 0;
-
-    return 0;
+/* STM32 implementation of the shared time-source interface */
+Status TimeProvider_ReadTimestamp(uint32_t *out_timestamp) {
+    return RTC_ReadEpoch(out_timestamp);
 }
