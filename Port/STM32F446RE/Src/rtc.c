@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "rtc.h"
 #include "stm32f4xx.h"
@@ -28,7 +29,7 @@
  * a timestamp earlier than that value is treated as a calendar rollback ***** **** ** *** * */
 #define TRUST_MARKER 0x52544332U
 
-/* Timeouts, ms. Each wait ends: the flag arrives or the timeout expires *** * * ****** * * * * ***** * * * ** */
+/* Timeouts, ms; each wait ends: the flag arrives or the timeout expires *** * * ****** * * * * ***** * * * ** */
 #define LSE_STARTUP_TIMEOUT_MS 5000U  /* Crystal start-up takes up to seconds (datasheet, LSE characteristics) */
 #define INIT_TIMEOUT_MS        1000U  /* INITF: expected after about 2 RTCCLK cycles (61 us) **** *** ***** ** */
 #define SYNC_TIMEOUT_MS        1000U  /* RSF: expected after about 2 RTCCLK cycles (61 us) *** *** * ***** *** */
@@ -56,6 +57,10 @@
 /* Backup-domain control register (RCC_BDCR) *** * * * ****** *** **** * ** * * ***** *** ****** * * * ***** * */
 #define BDCR_CLOCK_MASK     (RCC_BDCR_RTCEN | RCC_BDCR_RTCSEL   | RCC_BDCR_LSEON | RCC_BDCR_LSERDY)
 #define BDCR_CLOCK_EXPECTED (RCC_BDCR_RTCEN | RCC_BDCR_RTCSEL_0 | RCC_BDCR_LSEON | RCC_BDCR_LSERDY)
+
+/* STM32F446 RTC supports calendar years 2000-2099; RTC_ISR.INITS requires a non-zero year field */
+_Static_assert(TIME_PROVIDER_MIN_EPOCH >= UINT32_C(978307200),  "RTC application range must start in 2001 or later");
+_Static_assert(TIME_PROVIDER_MAX_EPOCH <= UINT32_C(4102444799), "RTC application range must end by 2099");
 
 /* True once RTC_Init() has confirmed that the clock runs; cleared by anything that may stop it *** * * * **** */
 static bool s_clock_alive = false;
@@ -100,12 +105,15 @@ static bool WaitForFlag(const volatile uint32_t *reg, const uint32_t mask,
 static void BackupAccessEnable(void) {
     RCC->APB1ENR |= RCC_APB1ENR_PWREN;
     (void)RCC->APB1ENR; /* Read-back: the clock needs a moment to reach PWR */
+
     PWR->CR |= PWR_CR_DBP;
+    (void)PWR->CR; /* Complete the DBP write before accessing the backup domain (ES0298 Rev 8, 2.2.9) */
 }
 
 /** @internal @brief Closes write access to the backup domain again. */
 static void BackupAccessDisable(void) {
-    PWR->CR &= ~PWR_CR_DBP;
+	PWR->CR &= ~PWR_CR_DBP;
+	(void)PWR->CR; /* Complete the DBP write (ES0298 Rev 8, 2.2.9) */
 }
 
 /** @internal @brief Clears the trust marker without changing the calendar. */

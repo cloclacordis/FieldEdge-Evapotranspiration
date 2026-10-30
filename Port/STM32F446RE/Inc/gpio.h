@@ -8,15 +8,12 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
 #include "stm32f4xx.h"
 
 void LD_Init(void);
 void LD_On(void);
 void LD_Off(void);
 void LD_Toggle(void);
-void BTN_Init(void);
-bool BTN_State(void);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,7 @@
 #include "uart.h"
 #include "service-console.h"
 
+#include "03-validation/033-status/status.h"
 #include "02-providers/023-time/calendar-time.h"
 #include "02-providers/023-time/time-provider.h"
 #include "02-providers/021-date-provider/date-provider.h"
@@ -109,29 +110,28 @@ static void PrintStartupStatus(void) {
     const RTCState state = RTC_GetState();
 
     (void)printf("\nUART service console ready (115200 baud).\n");
-    (void)printf("\nCommands: TIME | SET-UTC YYYY-MM-DDTHH:MM:SSZ\n");
+    (void)printf("\nCommands: TIME | SET-UTC YYYY-MM-DDTHH:MM:SSZ | RUN\n");
     (void)printf("SET-UTC uses UTC, 24-hour time.\n");
     (void)printf("\nRTC state: %s\n", RTCState_ToString(state));
 
     if (state == RTC_STATE_TRUSTED) {
         (void)printf(
         	"RTC time is trusted.\n"
-        	"Enter `TIME` to verify it, or press B1 to calculate.\n");
+        	"Enter TIME to verify it, or RUN to calculate.\n");
     } else if (state == RTC_STATE_CLOCK_FAULT) {
         (void)printf(
         	"RTC hardware is unavailable. Fix the RTC clock before calculating.\n");
     } else {
         (void)printf(
-        	"RTC time is not trusted. Close the serial terminal,\n"
-        	"run Tools/RTC/rtc-set.py from the host,\n"
-        	"then reopen the terminal before B1.\n");
+        	"\nRTC time is not trusted. Close the serial terminal,\n"
+        	"run Tools/RTC/rtc-set.py from the host, then reopen the terminal before RUN.\n");
     }
 }
 
-static void HandleLine(const char *line) {
+static bool HandleLine(const char *line) {
     if (strcmp(line, "TIME") == 0) {
         Console_PrintCurrentTime();
-        return;
+        return false;
     }
 
     if (strncmp(line, CMD_SET_PREFIX, sizeof(CMD_SET_PREFIX) - 1U) == 0) {
@@ -142,7 +142,7 @@ static void HandleLine(const char *line) {
         if (status != STATUS_OK) {
             (void)printf("SET-UTC: %s\n", Status_ToString(status));
             (void)printf("Expected: SET-UTC YYYY-MM-DDTHH:MM:SSZ (UTC).\n");
-            return;
+            return false;
         }
 
         status = RTC_SetEpoch(timestamp);
@@ -155,10 +155,16 @@ static void HandleLine(const char *line) {
         }
 
         Console_PrintCurrentTime();
-        return;
+        return false;
+    }
+    
+    if (strcmp(line, "RUN") == 0) {
+        return true;
     }
 
-    (void)printf("Command rejected. Use TIME or SET-UTC YYYY-MM-DDTHH:MM:SSZ.\n");
+    (void)printf("\nCommand rejected. Use TIME, SET-UTC YYYY-MM-DDTHH:MM:SSZ, or RUN.\n");
+    
+    return false;
 }
 
 void Console_Init(void) {
@@ -168,7 +174,8 @@ void Console_Init(void) {
     PrintStartupStatus();
 }
 
-void Console_Poll(void) {
+bool Console_Poll(void) {
+    bool run_requested = false;
     char character;
 
     while (UART_TryReadChar(&character)) {
@@ -177,16 +184,23 @@ void Console_Poll(void) {
                 (void)printf("Command rejected: line too long.\n");
             } else if (s_length  > 0U) {
                 s_line[s_length] = '\0';
-                HandleLine(s_line);
+
+                if (HandleLine(s_line)) {
+                    run_requested = true;
+                }
             }
 
             s_length   = 0U;
             s_overflow = false;
+
         } else if (s_length  < (LINE_CAPACITY - 1U)) {
             s_line[s_length] = character;
             ++s_length;
+
         } else {
             s_overflow = true;
         }
     }
+
+    return run_requested;
 }

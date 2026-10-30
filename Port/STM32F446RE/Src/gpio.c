@@ -3,7 +3,6 @@
 
 #include "gpio.h"
 
-#define BTN_PIN  (1U << 13)
 #define LD_PIN   (1U << 5)
 
 void LD_Init(void) {
@@ -22,19 +21,4 @@ void LD_Off(void) {
 
 void LD_Toggle(void) {
     GPIOA->ODR  ^= LD_PIN;
-}
-
-void BTN_Init(void) {
-    RCC->AHB1ENR |=  RCC_AHB1ENR_GPIOCEN;
-    GPIOC->MODER &= ~(1U << 26);
-    GPIOC->MODER &= ~(1U << 27);
-}
-
-/* B1 is active low */
-bool BTN_State(void) {
-    if (GPIOC->IDR & BTN_PIN) {
-        return false;
-    } else {
-        return true;
-    }
 }

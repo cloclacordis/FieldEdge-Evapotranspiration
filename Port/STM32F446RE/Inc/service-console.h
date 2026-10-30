@@ -8,9 +8,10 @@
 extern "C" {
 #endif
 
-/* Polled UART console; Console_Poll() must be called regularly */
+#include <stdbool.h>
+
 void Console_Init(void);
-void Console_Poll(void);
+bool Console_Poll(void);
 void Console_PrintCurrentTime(void);
 
 #ifdef __cplusplus
