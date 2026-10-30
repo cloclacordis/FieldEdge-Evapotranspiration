@@ -1,18 +1,19 @@
-# Verified call graph
+# Verified host call graph (v0.1.x)
 
 ## Scope
 
-This document specifies the verified call sequence of the production entry point (`main.c` -> `RunDailyCycle()`, `fao56_app`) for a single execution in which all steps complete successfully (the “happy path”).
+This document records the verified happy-path call sequence of the v0.1.x PC application (`fao56_app`), from `main.c` through `RunDailyCycle()` to successful report output. It does not describe the STM32F446RE firmware entry point or target-specific initialization introduced in v0.2.x.
 
 Verification basis:
 
 * Static call structure — `cflow`, run against `main.c` and `daily-cycle.c`; the output covers first-level callees only.  
 * Dynamic call order — a GDB-assisted execution trace, breakpointed at `RunDailyCycle()` entry and single-stepped to process exit, using a build with mocked/emulated sensor backends (host execution, not target hardware, for v0.1.x).
 
-The two sources agree exactly on the call order for every step listed below.  
+The static call structure reported by cflow is consistent with the direct-call sequence observed in the GDB trace.
+
 See also [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
 
-This document covers the happy path only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises error-path scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document; it will be addressed in a future revision.
+This document covers the happy path only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises error-path scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document.
 
 Line numbers below refer to `daily-cycle.c` as it existed at the time of the GDB trace (`2026-09-14`). Verify against the current repository state before relying on them for navigation.
 
@@ -131,7 +132,7 @@ Present in source, not exercised in the recorded happy path trace:
 * `SensorLux_ReadDefault` — per-sample fallback for `SensorLux_ReadInstant`, within the 12-sample measurement loop.  
 * `PrintStatusAndReturn` and any early return path from `RunDailyCycle()`.
 
-**Note.** All `Sensor*_ReadInstant()` mock implementations (`01-measurement/*`) return a non-`STATUS_OK` status only when their output pointer is `NULL`. Since every call site in `RunDailyCycle()` passes a valid pointer, none of the sensor-fallback branches above are merely untraced — they are currently unreachable in the PC-mock build (v0.1.x). They become reachable only once real sensor backends are integrated (MCU port).
+**Note.** All `Sensor*_ReadInstant()` mock implementations (`Code/01-measurement`) return a non-`STATUS_OK` status only when their output pointer is `NULL`. Since every call site in `RunDailyCycle()` passes a valid pointer, these fallback branches are currently unreachable in the PC-mock build (v0.1.x), not merely absent from the recorded trace. They remain relevant for future backends that can report runtime sensor failures, including hardware drivers or fault-injecting test implementations.
 
 * * *
 
