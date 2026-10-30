@@ -148,6 +148,6 @@ First run of the calculation kernel on real hardware (STM32F446RET6 Nucleo-64, C
 
 * * *
 
-### devlog20 — STM32F446RE RTC Integration and Hardware Verification
+### devlog21 — STM32F446RE RTC Integration & Hardware Verification
 
 This devlog documents the implementation and verification of the RTC/time subsystem for the STM32F446RE port. It covers UTC timekeeping using LSE, trusted-time validation, host-assisted time setting over UART, and integration with the daily calculation. It also records firmware build and hardware checks, followed by errata-driven RTC updates and replacement of the PC13/B1 calculation trigger with a UART `RUN` command.

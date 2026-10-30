@@ -14,7 +14,7 @@ This separation keeps the application core portable and allows it to be reused a
 ## Related documents
 
 * [`Software architecture diagram`](../Docs/software-architecture-diagram.md).  
-* [`Data flow specification`](..Docs/data-flow-specification.md).  
+* [`Data flow specification`](../Docs/data-flow-specification.md).  
 * [`Contracts and conventions`](../Docs/contracts-and-conventions.md).  
 * [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
 * [`Software architecture diagram`](../Docs/software-architecture-diagram.md).  
