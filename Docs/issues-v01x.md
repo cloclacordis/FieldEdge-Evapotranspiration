@@ -23,16 +23,7 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 * * *
 
-## 3. Time zone dependency of `DateProvider_Read`
-
-* Location: `Code/02-providers/021-date-provider/date-provider.c`.  
-* `localtime()` resolves the current date using the host’s/runtime’s configured local time zone. Day-of-year and solar declination calculations are date-sensitive at the midnight boundary.  
-* Status: open design question for the RTC-based replacement planned for v0.2.x. The time-base semantics (UTC vs. local time, and any required time-zone/DST handling) should be defined explicitly rather than relying on host-runtime time-zone configuration that will not be implicitly available on the MCU.  
-* The v0.2-dev smoke test uses a fixed date; this does not resolve the question above.
-
-* * *
-
-## 4. `CONFIG_BRIGHT_LUX_THRESHOLD` is an uncalibrated proxy for a different physical quantity
+## 3. `CONFIG_BRIGHT_LUX_THRESHOLD` is an uncalibrated proxy for a different physical quantity
 
 * Location: `Code/02-providers/022-configurations/deployment-config.h`; consumed by `SolarRadiation_Calc()` via `SunshineLux_*`.  
 * Illuminance (lux) is not the radiometric quantity (W/m^2) WMO’s sunshine-duration [`definition`](https://library.wmo.int/idviewer/68695/358) uses. Known, documented gap, not an unexamined one — full analysis, citations, and current configuration in [`illuminance-proxy.md`](illuminance-proxy.md).  

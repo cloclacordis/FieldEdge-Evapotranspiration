@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 
-### ## # Source code files used for both targets # ## ###
+### ## # Source code files # ## ###
 set(FAO56_SOURCES
         01-measurement/011-air-temperature-read/air-temperature-read.c
         01-measurement/011-air-temperature-read/air-temperature-read.h
@@ -30,6 +30,12 @@ set(FAO56_SOURCES
         02-providers/021-date-provider/date-provider.h
 
         02-providers/022-configurations/deployment-config.h
+
+        02-providers/023-time/calendar-time.c
+        02-providers/023-time/calendar-time.h
+        02-providers/023-time/time-provider.h
+
+        02-providers/023-time/time-provider-host.c
 
         03-validation/031-value-source/value-source.c
         03-validation/031-value-source/value-source.h
@@ -92,10 +98,11 @@ add_executable(fao56_app
 )
 
 target_link_libraries(fao56_app m)
-target_compile_options(fao56_app PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
 set_target_properties(fao56_app PROPERTIES C_EXTENSIONS OFF)
+target_compile_options(fao56_app PRIVATE -Wall -Wextra -Wpedantic
+        -Wfloat-equal -Wconversion -Wshadow -Werror)
 
-### ## # Target 2: test binary [unity] # ## ###
+### ## # Target 2: test binary # ## ###
 include(FetchContent)
 
 FetchContent_Declare(
@@ -114,7 +121,8 @@ add_executable(fao56_test
 
 target_link_libraries(fao56_test m unity)
 target_compile_definitions(unity PUBLIC UNITY_INCLUDE_DOUBLE)
-target_compile_options(fao56_test PRIVATE -Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror)
+target_compile_options(fao56_test PRIVATE -Wall -Wextra -Wpedantic
+        -Wfloat-equal -Wconversion -Wshadow -Werror)
 
 if(ENABLE_SANITIZERS)
     target_compile_options(fao56_test PRIVATE
@@ -128,6 +136,22 @@ if(ENABLE_SANITIZERS)
     )
 endif()
 
+### ## # Target 3: Gregorian conversion and the platform-independent time API tests;
+#### ### a deterministic TimeProvider_ReadTimestamp() test double # ### ### # ## ###
+add_executable(fao56_time_test
+        06-test/time-test.c
+        03-validation/033-status/status.c
+        02-providers/023-time/calendar-time.c
+        02-providers/021-date-provider/date-provider.c
+)
+
+target_link_libraries(fao56_time_test m unity)
+set_target_properties(fao56_time_test PROPERTIES C_EXTENSIONS OFF)
+target_compile_options(fao56_time_test PRIVATE -Wall -Wextra -Wpedantic
+        -Wfloat-equal -Wconversion -Wshadow -Werror)
+
+
 # CTest
 enable_testing()
 add_test(NAME fao56_suite COMMAND fao56_test)
+add_test(NAME fao56_time_suite COMMAND fao56_time_test)

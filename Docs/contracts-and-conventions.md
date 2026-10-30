@@ -6,6 +6,8 @@ Full contract goes on the **declaration** in the `.h` file. A function with no `
 
 `Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, `STATUS_INTERNAL_ERROR`. Only the first three are returned anywhere in the current v0.1.x codebase; `STATUS_UNAVAILABLE` and `STATUS_INTERNAL_ERROR` are reserved for the v0.2.x stage. Contracts below list only what a function actually returns in v0.1.x.
 
+`Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, and `STATUS_INTERNAL_ERROR`. The portable time API uses `STATUS_UNAVAILABLE` when no valid timestamp is available. The STM32 RTC port (v0.2.x under development) also uses `STATUS_UNAVAILABLE` and `STATUS_INTERNAL_ERROR` for hardware and configuration failures. The contracts below describe the public APIs of the portable `Code/` layer; RTC-specific contracts are defined in `Port/STM32F446RE/Inc/rtc.h`.
+
 * * *
 
 ## Conventions: five recurring patterns
@@ -241,21 +243,42 @@ Status SensorWindSpeed_ReadDefault(WindSpeedSample *out_sample);
 
 ```C
 /**
- * @brief Reads the current calendar date from the host system clock.
+ * @brief Reads the current calendar date for the configured station.
  *
- * Wraps time() and localtime(). Uses the host's configured local
- * time zone. This is a known open question for the RTC-based
- * replacement in v0.2.x (see README, "Limitations").
+ * The UTC timestamp comes from TimeProvider_ReadTimestamp(). The station date
+ * is derived using CONFIG_STATION_UTC_OFFSET_MIN; the host computer's time zone
+ * and daylight-saving rules do not affect the result.
  *
  * @param[out] date Destination for the date. Must not be NULL.
  *
  * @retval STATUS_OK            *date is valid.
  * @retval STATUS_NULL_POINTER  date was NULL.
- * @retval STATUS_INVALID_VALUE `time()` or `localtime()`
- *                              failed (unable to obtain the date).
+ * @retval STATUS_UNAVAILABLE   A trusted timestamp is not available.
+ * @retval STATUS_INVALID_VALUE The timestamp/offset could not be converted.
  */
-Status DateProvider_Read(DateData* date);
+Status DateProvider_Read(DateData *date);
 ```
+
+* * *
+
+### `time-provider.h`
+
+```C
+/**
+ * @brief Reads the current UTC instant as seconds since 1970-01-01T00:00:00Z.
+ *
+ * This is the shared time-source interface used by measurement and calendar
+ * providers. The implementation is platform-specific. Application code does
+ * not depend on RTC registers or the host's time-zone settings.
+ *
+ * @param[out] out_timestamp Destination; must not be NULL and is unchanged
+ *                           when the operation fails.
+ *
+ * @retval STATUS_OK            A timestamp in the supported application range.
+ * @retval STATUS_NULL_POINTER  out_timestamp was NULL.
+ * @retval STATUS_UNAVAILABLE   The clock is unset, untrusted, or out of range.
+ */
+Status TimeProvider_ReadTimestamp(uint32_t *out_timestamp);
 
 * * *
 
@@ -991,7 +1014,8 @@ Status SunshineLux_FinalizeDay(SunshineLuxData* data);
  * @brief Resets the day's bright/total counters for a new day.
  *
  * Calibration parameters (`.threshold_lux`, `.sample_period_sec`) are
- * preserved. On the MCU (v0.2.x), called from an RTC midnight interrupt.
+ * preserved. The current STM32 port does not yet schedule this function
+ * automatically at midnight.
  *
  * @param[in,out] data Accumulator to reset; must already be
  *                     initialized. Must not be NULL.

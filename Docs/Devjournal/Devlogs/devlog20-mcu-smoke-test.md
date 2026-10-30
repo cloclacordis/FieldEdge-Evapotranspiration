@@ -64,25 +64,21 @@ bool BTN_State(void);
 ```C
 #include "gpio.h"
 
-#define GPIOAEN  (1U << 0)
-#define GPIOCEN  (1U << 2)
-#define LD_BS5   (1U << 5)
-#define LD_BR5   (1U << 21)
 #define BTN_PIN  (1U << 13)
 #define LD_PIN   (1U << 5)
 
 void LD_Init(void) {
-    RCC->AHB1ENR |=  GPIOAEN;
+    RCC->AHB1ENR |=  RCC_AHB1ENR_GPIOAEN;
     GPIOA->MODER |=  (1U << 10);
     GPIOA->MODER &= ~(1U << 11);
 }
 
 void LD_On(void) {
-    GPIOA->BSRR |= LD_BS5;
+    GPIOA->BSRR |= GPIO_BSRR_BS5;
 }
 
 void LD_Off(void) {
-    GPIOA->BSRR |= LD_BR5;
+    GPIOA->BSRR |= GPIO_BSRR_BR5;
 }
 
 void LD_Toggle(void) {
@@ -90,7 +86,7 @@ void LD_Toggle(void) {
 }
 
 void BTN_Init(void) {
-    RCC->AHB1ENR |=  GPIOCEN;
+    RCC->AHB1ENR |=  RCC_AHB1ENR_GPIOCEN;
     GPIOC->MODER &= ~(1U << 26);
     GPIOC->MODER &= ~(1U << 27);
 }
@@ -120,23 +116,16 @@ void UART_Init(void);
 #include <stdint.h>
 #include "uart.h"
 
-#define GPIOAEN   (1U << 0)
-#define UART2EN   (1U << 17)
-
 #define BAUDRATE  (115200)
 #define FREQ      (16000000)
 #define APB1_CLK  FREQ
-
-#define CR1_TE    (1U << 3)
-#define CR1_UE    (1U << 13)
-#define SR_TXE    (1U << 7)
 
 static void UART_SetBaudrate(uint32_t periph_clk, uint32_t baudrate);
 static void UART_Write(int ch);
 
 int __io_putchar(int ch) {
     if (ch == '\n') {
-        UART_Write('\r');  // Пригодится для вывода в Minicom
+        UART_Write('\r');
     }
     
     UART_Write(ch);
@@ -144,7 +133,7 @@ int __io_putchar(int ch) {
 }
 
 void UART_Init(void) {
-    RCC->AHB1ENR  |=  GPIOAEN;
+    RCC->AHB1ENR  |=  RCC_AHB1ENR_GPIOAEN;
     GPIOA->MODER  &= ~(1U << 4);
     GPIOA->MODER  |=  (1U << 5);
     GPIOA->AFR[0] |=  (1U << 8);
@@ -152,14 +141,14 @@ void UART_Init(void) {
     GPIOA->AFR[0] |=  (1U << 10);
     GPIOA->AFR[0] &= ~(1U << 11);
 
-    RCC->APB1ENR  |=  UART2EN;
+    RCC->APB1ENR  |=  RCC_APB1ENR_USART2EN;
     UART_SetBaudrate(APB1_CLK, BAUDRATE);
-    USART2->CR1    =  CR1_TE;
-    USART2->CR1   |=  CR1_UE;
+    USART2->CR1    =  USART_CR1_TE;
+    USART2->CR1   |=  USART_CR1_UE;
 }
 
 static void UART_Write(int ch) {
-    while (!(USART2->SR & SR_TXE)) {}
+    while (!(USART2->SR & USART_SR_TXE)) {}
     USART2->DR = (ch & 0xFF);
 }
 

@@ -113,7 +113,7 @@ Status SunshineLux_FinalizeDay(SunshineLuxData* data);
  * @brief Resets the day's bright/total counters for a new day.
  *
  * Calibration parameters (`.threshold_lux`, `.sample_period_sec`) are
- * preserved. On the MCU (v0.2.x), called from an RTC midnight interrupt.
+ * preserved. The current STM32 port does not yet schedule this function automatically at midnight.
  *
  * @param[in,out] data Accumulator to reset; must already be
  *                     initialized. Must not be NULL.

@@ -8,8 +8,11 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include "stm32f4xx.h"
+
 void UART_Init(void);
+bool UART_TryReadChar(char *character);
 
 #ifdef __cplusplus
 }

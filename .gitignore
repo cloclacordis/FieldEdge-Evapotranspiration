@@ -3,7 +3,8 @@
 /Debug/
 /Release/
 /cmake-build-*/
-build-mcu/
+/build-mcu/
+/build-sanitize/
 
 # STM32CubeIDE
 .settings/
@@ -35,3 +36,6 @@ Thumbs.db
 
 # Doxygen
 Docs/Generated/
+
+# Python virtual environment
+.venv/
