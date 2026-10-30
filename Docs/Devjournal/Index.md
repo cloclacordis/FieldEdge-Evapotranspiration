@@ -22,6 +22,7 @@
 | 18 | Improvements to v0.1.0 | Hardening: compiler warnings, `NaN` checks, `main.c`/`daily-cycle.c` split, 58 tests, `cppcheck`. |
 | 19 | New Checks & Documentation | Adds Valgrind and sanitizer checks, dedicated CI job, and v0.1.0 architecture documentation. |
 | 20 | Smoke Testing | First run of the calculation kernel on real hardware. |
+| 21 | RTC Driver | Implementation and verification of the RTC/time subsystem for the STM32F446RE port. |
 
 * * *
 
@@ -144,3 +145,9 @@ Adds Valgrind memory checks, introduces optional `AddressSanitizer` and `Undefin
 ### devlog20 — Preparing project for porting, smoke testing
 
 First run of the calculation kernel on real hardware (STM32F446RET6 Nucleo-64, Cortex-M4F). Describes the minimal platform layer, a new `fao56_mcu` CMake target cross-compiled with `arm-none-eabi-gcc` through a toolchain file (with CI building the firmware), and flashing/debugging with OpenOCD and GDB.
+
+* * *
+
+### devlog20 — STM32F446RE RTC Integration and Hardware Verification
+
+This devlog documents the implementation and verification of the RTC/time subsystem for the STM32F446RE port. It covers UTC timekeeping using LSE, trusted-time validation, host-assisted time setting over UART, and integration with the daily calculation. It also records firmware build and hardware checks, followed by errata-driven RTC updates and replacement of the PC13/B1 calculation trigger with a UART `RUN` command.

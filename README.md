@@ -8,30 +8,32 @@
 
 **Computation kernel (v0.1.x)** — a C11 implementation of the ETo calculation pipeline. It is complete, tested, and runs on a PC using emulated sensor data. The computation kernel is designed to be reusable independently of the target hardware.
 
-**Embedded implementation (v0.2.x under development)**. A first hardware smoke test has been completed: the calculation kernel ran on an STM32F446RET6 Nucleo-64 board and printed the full daily report over UART (see [`devlog20`](Docs/Devjournal/Devlogs/devlog20-mcu-smoke-test.md)). Active development continues on the [`v0.2-dev`](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/tree/v0.2-dev) branch.
+**Embedded implementation (v0.2.x under development).** The STM32F446RE Nucleo-64 port runs the daily calculation and reports results over UART. The RTC uses the LSE crystal and stores UTC. Initial time is set explicitly through the UART service console, using the host computer as the time source. RTC time retention and trust validation were verified across normal MCU resets while the backup domain remained powered. Sensor inputs remain emulated; this is a hardware smoke test, not a field-ready release. See [`RTC commissioning`](Docs/rtc-commissioning.md) and [`devlog21`](Docs/Devjournal/Devlogs/devlog21-rtc-driver.md).
 
 * * *
 
 ## Build and run
 
-Requirements: CMake >= 3.31 and a C11-compatible compiler.
+Requirements: CMake >= 3.31 and a C11-compatible compiler. The first configure may require network access to fetch Unity.
 
 ```bash
-cmake -B build
+cmake -S Code -B build
 cmake --build build
-./build/fao56_app        # runs the PC computation kernel
-./build/fao56_test       # runs the Unity test suite (58 tests)
+./build/fao56_app
+ctest --test-dir build --output-on-failure
 ```
 
-To build with the same sanitizers used in CI.
+`fao56_app` runs the PC computation kernel. The build produces two test executables: `fao56_test` (58 FAO-56 tests) and `fao56_time_test` (calendar and time-provider tests). CTest runs both registered test suites.
+
+To run the FAO-56 computation suite with AddressSanitizer and UndefinedBehaviorSanitizer:
 
 ```bash
-cmake -B build -DENABLE_SANITIZERS=ON
-cmake --build build
-./build/fao56_test
+cmake -S Code -B build-sanitize -DENABLE_SANITIZERS=ON
+cmake --build build-sanitize --target fao56_test
+./build-sanitize/fao56_test
 ```
 
-### STM32F446RE firmware (v0.2.x, smoke test)
+### STM32F446RE firmware (v0.2.x)
 
 Requirements: CMake >= 3.31, `arm-none-eabi-gcc` with newlib-nano.
 
@@ -40,7 +42,8 @@ cmake -S Port/STM32F446RE -B build-mcu
 cmake --build build-mcu
 ```
 
-Flashing and debugging with OpenOCD and GDB: [`Port/flashing-routine.md`](Port/flashing-routine.md).
+Flashing and debugging with OpenOCD and GDB: [`Docs/flashing-routine.md`](Docs/flashing-routine.md).  
+RTC commissioning and time-setting: [`Docs/rtc-commissioning.md`](Docs/rtc-commissioning.md).
 
 * * *
 
@@ -57,7 +60,7 @@ See [`Docs/system-context-diagram.md`](Docs/system-context-diagram.md).
 The software uses layers with strictly unidirectional dependencies.
 
 * [`Code/01-measurement`](Code/01-measurement): sensor reading (emulated on PC in v0.1.x).  
-* [`Code/02-providers`](Code/02-providers): date/time and deployment configuration (system time is used on PC in v0.1.x).  
+* [`Code/02-providers`](Code/02-providers): portable UTC timestamp interface, Gregorian calendar conversion, station date and deployment configuration. The PC and STM32 ports provide the time source separately.  
 * [`Code/03-validation`](Code/03-validation): status codes, value ranges, data source tracking, and shared mathematical constants/utilities.  
 * [`Code/04-calculation`](Code/04-calculation): computation modules (model constants, measured data, and computed data).  
 * [`Code/05-orchestration`](Code/05-orchestration): [`daily-cycle.c`](Code/05-orchestration/daily-cycle.c) runs the measurement-and-calculation pipeline; [`main.c`](Code/05-orchestration/main.c) calls it and reports the result, including which step failed if the cycle does not complete.  
@@ -68,9 +71,9 @@ The calculation layer is a pure computation kernel. The computation kernel has n
 
 See [`Docs/software-architecture-diagram.md`](Docs/software-architecture-diagram.md).
 
-Deployment parameters (anemometer height, geographic coordinates, elevation, crop coefficient Kc, and sensor thresholds) are defined in [`Code/02-providers/022-configurations/deployment-config.h`](Code/02-providers/022-configurations/deployment-config.h). Model constants (λ, Stefan–Boltzmann σ, etc.) are defined locally within each computation module in [`Code/04-calculation/.../*-calc.c`](Code/04-calculation). Shared mathematical constants used across files (π, degree/radian conversion) are defined in [`Code/03-validation/034-math-utils/math-utils.h`](Code/03-validation/034-math-utils/math-utils.h).
+Deployment parameters (anemometer height, geographic coordinates, elevation, crop coefficient Kc, and sensor thresholds) are defined in [`Code/02-providers/022-configurations/deployment-config.h`](Code/02-providers/022-configurations/deployment-config.h). Model constants (λ, Stefan–Boltzmann σ, etc.) are defined locally within each computation module in [`Code/04-calculation`](Code/04-calculation). Shared mathematical constants used across files (π, degree/radian conversion) are defined in [`Code/03-validation/034-math-utils/math-utils.h`](Code/03-validation/034-math-utils/math-utils.h).
 
-All public functions return a [`Status`](Code/03-validation/033-status) value. Results are written to out-parameters. Pointer arguments are checked for `NULL` first in every function. Numeric inputs are checked for `NaN` and infinite values before any arithmetic operation.
+Public operations that can fail return a [`Status`](Code/03-validation/033-status) value. Output values are provided through out-parameters where applicable. Public functions accepting pointer arguments validate them before dereferencing. Floating-point inputs used by the calculation layer are checked for finiteness and, where applicable, valid ranges before use.
 
 Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `initialized` flag that is `false` after `_Init()` and `true` after the first valid `_Update()`. Single-call result structs (`AtmosphericData`, `NetRadiationData`) are immediately usable after `_Init()`.
 
@@ -78,12 +81,15 @@ Accumulator structs (`AirTemperatureData`, `WindSpeedData`, etc.) carry an `init
 
 ## Testing and verification
 
-```
-58 Tests  0 Failures  0 Ignored
-OK
+The FAO-56 computation suite (`fao56_test`) contains 58 tests verified against worked examples from FAO-56 [`1998`](https://www.fao.org/4/x0490e/x0490e00.htm) (see also [`2025`](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)). The separate `fao56_time_test` suite covers calendar conversion, Unix timestamp limits, leap years, station UTC offset, and unavailable time sources.
+
+Run both test suites with:
+
+```bash
+ctest --test-dir build --output-on-failure
 ```
 
-All test cases are verified against worked examples from FAO-56 [`1998`](https://www.fao.org/4/x0490e/x0490e00.htm) (see also [`2025`](https://agrhysmo.agr.unipi.it/wp-content/uploads/2025/09/FAO56%202025.pdf)). Reference values and tolerances are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
+Reference values and tolerances for the FAO-56 computation suite are documented in [`Code/06-test/test-config.h`](Code/06-test/test-config.h).
 
 * * *
 
@@ -96,15 +102,15 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * The codebase was [`checked`](Docs/Devjournal/Devlogs/devlog18-review-and-improvements-v010.md) with the `cppcheck` static analyzer.  
 * The PC test binary was [`checked`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) with Valgrind (`--leak-check=full --track-origins=yes`), AddressSanitizer, and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined`) to detect memory errors, leaks, and undefined behavior.  
 * Numeric inputs to the calculation layer are validated for `NaN` and infinite values and, where applicable, against valid ranges before use.  
-* CI (GitHub Actions) builds all targets, runs the full test suite, runs the test suite with AddressSanitizer and UndefinedBehaviorSanitizer on every `push` and `pull request`, and cross-compiles the STM32 firmware (Debug and Release) with `arm-none-eabi-gcc`.
+* CI runs host builds and tests, including AddressSanitizer and UndefinedBehaviorSanitizer checks, on every push and pull request. The MCU workflow cross-compiles the STM32 firmware in Debug and Release configurations when `Code/`, `Port/`, or the MCU workflow changes.
 
 * * *
 
-## Limitations and open questions of v0.1.x
+## Limitations and open questions
 
-* Sensor data is currently emulated using fixed constants; no real hardware is involved yet.  
-* `time()` from `<time.h>` is used for the current day of year and illuminance measurement timestamps. The PC implementation causes an internal heap allocation in [`libc`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) when timezone information is initialized; this allocation is not performed by application code. When porting to an MCU, the PC time implementation will be replaced with RTC access, and the MCU implementation should be verified to ensure that it does not introduce dynamic memory allocation.  
-* State is not persisted between runs (EEPROM/Flash persistence is planned for v0.2.x).  
+* Sensor inputs are currently emulated using fixed constants; no physical environmental sensors are integrated yet.  
+* The PC time provider obtains UTC Unix timestamps from `time()`; the STM32 port obtains them from the on-chip RTC. The portable computation kernel does not depend on `time_t`, `localtime()`, RTC registers, or the host time zone. The station date uses the fixed `CONFIG_STATION_UTC_OFFSET_MIN`; daylight-saving transitions are not implemented. The RTC requires a functioning LSE source and explicit time-setting after loss of the backup-domain state. It is not synchronized automatically and does not compensate oscillator drift. See [`RTC commissioning`](Docs/rtc-commissioning.md).  
+* Measurement and calculation state is not persisted between runs. Persistent storage of application data in EEPROM or Flash remains planned for v0.2.x.  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support, so double-precision arithmetic runs in software. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. A first measurement on an STM32F446RE (16 MHz, one full `RunDailyCycle()`, report output excluded) took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build) — see [`devlog20`](Docs/Devjournal/Devlogs/devlog20-mcu-smoke-test.md). Speed is therefore not currently a reason to change this. The decision remains open for code-size and portability reasons (e.g. targets without an FPU) and pending a comparison with a `float` build.  
 * Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Proper estimation is planned alongside real sensor-driver development in v0.2.x, where the required cross-channel data access will exist “naturally”.  
@@ -129,6 +135,7 @@ A port is a directory under [`Port/`](Port) that supplies everything platform-sp
 * [`Contracts and conventions`](Docs/contracts-and-conventions.md).  
 * [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
 * [`Illuminance as a proxy`](Docs/illuminance-proxy.md).  
+* [`RTC commissioning`](Docs/rtc-commissioning.md).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
 
 * * *
