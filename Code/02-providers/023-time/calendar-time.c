@@ -71,7 +71,7 @@ Status CalendarTime_ToEpoch(const CalendarTime *t, uint32_t *out_epoch) {
     const uint64_t seconds = (days * SECONDS_PER_DAY)
         + ((uint64_t)t->hour   * SECONDS_PER_HOUR)
         + ((uint64_t)t->minute * SECONDS_PER_MINUTE)
-        + (uint64_t)t->second;
+        +  (uint64_t)t->second;
 
     if (seconds > (uint64_t)UINT32_MAX) {
         return STATUS_INVALID_VALUE;

@@ -124,13 +124,13 @@ static void InvalidateTrustMarker(void) {
 }
 
 /** @internal @brief Removes the RTC register write protection (RTC_WPR key sequence). */
-static void RtcWriteEnable(void) {
+static void RTC_WriteEnable(void) {
     RTC->WPR = WPR_KEY_1;
     RTC->WPR = WPR_KEY_2;
 }
 
 /** @internal @brief Restores the RTC register write protection. */
-static void RtcWriteDisable(void) {
+static void RTC_WriteDisable(void) {
     RTC->WPR = RTC_WPR_KEY;
 }
 
@@ -313,7 +313,7 @@ Status RTC_Init(void) {
 
     RCC->BDCR |= RCC_BDCR_RTCEN;
 
-    RtcWriteEnable();
+    RTC_WriteEnable();
 
     /* Recover from a reset that interrupted a calendar write in INIT mode */
     if ((RTC->ISR &   RTC_ISR_INIT) != 0U) {
@@ -326,7 +326,7 @@ Status RTC_Init(void) {
 
     const bool synchronized = SynchronizeShadowRegisters();
 
-    RtcWriteDisable();
+    RTC_WriteDisable();
     BackupAccessDisable();
 
     if (!synchronized) {
@@ -489,11 +489,11 @@ Status RTC_SetEpoch(const uint32_t epoch_utc) {
         | (weekday << RTC_DR_WDU_Pos);
 
     BackupAccessEnable();
-    RtcWriteEnable();
+    RTC_WriteEnable();
 
     const Status status = SetCalendarUnlocked(epoch_utc, tr, dr);
 
-    RtcWriteDisable();
+    RTC_WriteDisable();
     BackupAccessDisable();
 
     return status;
