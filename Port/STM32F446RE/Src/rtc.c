@@ -58,7 +58,7 @@
 #define BDCR_CLOCK_MASK     (RCC_BDCR_RTCEN | RCC_BDCR_RTCSEL   | RCC_BDCR_LSEON | RCC_BDCR_LSERDY)
 #define BDCR_CLOCK_EXPECTED (RCC_BDCR_RTCEN | RCC_BDCR_RTCSEL_0 | RCC_BDCR_LSEON | RCC_BDCR_LSERDY)
 
-/* STM32F446 RTC supports calendar years 2000-2099; RTC_ISR.INITS requires a non-zero year field */
+/* STM32F446 RTC supports calendar years 2001-2099; RTC_ISR.INITS requires a non-zero year field */
 _Static_assert(TIME_PROVIDER_MIN_EPOCH >= UINT32_C(978307200),  "RTC application range must start in 2001 or later");
 _Static_assert(TIME_PROVIDER_MAX_EPOCH <= UINT32_C(4102444799), "RTC application range must end by 2099");
 
@@ -369,11 +369,16 @@ RTCState RTC_GetState(void) {
 
 const char *RTCState_ToString(const RTCState state) {
     switch (state) {
-        case RTC_STATE_CLOCK_FAULT: return "RTC_STATE_CLOCK_FAULT";
-        case RTC_STATE_NOT_SET:     return "RTC_STATE_NOT_SET";
-        case RTC_STATE_UNCONFIRMED: return "RTC_STATE_UNCONFIRMED";
-        case RTC_STATE_TRUSTED:     return "RTC_STATE_TRUSTED";
-        default:                    return "RTC_STATE_UNKNOWN";
+        case RTC_STATE_CLOCK_FAULT:
+            return "RTC_STATE_CLOCK_FAULT";
+        case RTC_STATE_NOT_SET:
+            return "RTC_STATE_NOT_SET";
+        case RTC_STATE_UNCONFIRMED:
+            return "RTC_STATE_UNCONFIRMED";
+        case RTC_STATE_TRUSTED:
+            return "RTC_STATE_TRUSTED";
+        default:
+            return "RTC_STATE_UNKNOWN";
     }
 }
 
