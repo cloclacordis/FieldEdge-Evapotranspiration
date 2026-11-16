@@ -1,7 +1,7 @@
 # ### SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Tim Alexeenko (@cloclacordis) # ###
 
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.28.3)
 
 # Cross-compile by default: no -DCMAKE_TOOLCHAIN_FILE needed
 if(NOT CMAKE_TOOLCHAIN_FILE)
