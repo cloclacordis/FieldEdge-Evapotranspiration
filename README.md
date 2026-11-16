@@ -14,7 +14,7 @@
 
 ## Build and run
 
-Requirements: CMake >= 3.31 and a C11-compatible compiler. The first configure may require network access to fetch Unity.
+Requirements: CMake >= 3.28.3 and a C11-compatible compiler. The first configure may require network access to fetch Unity.
 
 ```bash
 cmake -S Code -B build
@@ -35,7 +35,7 @@ cmake --build build-sanitize --target fao56_test
 
 ### STM32F446RE firmware (v0.2.x)
 
-Requirements: CMake >= 3.31, `arm-none-eabi-gcc` with newlib-nano.
+Requirements: CMake >= 3.28.3, `arm-none-eabi-gcc` with newlib-nano.
 
 ```bash
 cmake -S Port/STM32F446RE -B build-mcu

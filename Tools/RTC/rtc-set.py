@@ -22,11 +22,9 @@ RESPONSE_TIMEOUT_S = 10.0
 QUERY_INTERVAL_S = 0.75
 MAX_CLOCK_DIFFERENCE_S = 3.0
 
-
 def send_command(port, command):
     port.write((command + "\r\n").encode("ascii"))
     port.flush()
-
 
 def read_line(port):
     raw = port.readline()
@@ -36,7 +34,6 @@ def read_line(port):
     line = raw.decode("ascii", errors="replace").rstrip("\r\n")
     print(line, flush=True)
     return line
-
 
 def wait_for_time_response(port):
     """Query repeatedly."""
@@ -71,11 +68,9 @@ def wait_for_time_response(port):
         "and that the firmware is running."
     )
 
-
 def parse_utc(text):
     value = datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ")
     return value.replace(tzinfo=timezone.utc)
-
 
 def set_time_from_host(port):
     host_time = datetime.now(timezone.utc).replace(microsecond=0)
@@ -128,7 +123,6 @@ def set_time_from_host(port):
 
     print("\nRTC verified: %s (host difference %.1f s)." % (utc_text, difference))
 
-
 def main():
     parser = argparse.ArgumentParser(
         description="Set and verify an STM32F446RE RTC using the host UTC clock."
@@ -164,7 +158,6 @@ def main():
     finally:
         if port.is_open:
             port.close()
-
 
 if __name__ == "__main__":
     sys.exit(main())

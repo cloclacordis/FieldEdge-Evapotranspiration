@@ -112,8 +112,8 @@ static void BackupAccessEnable(void) {
 
 /** @internal @brief Closes write access to the backup domain again. */
 static void BackupAccessDisable(void) {
-	PWR->CR &= ~PWR_CR_DBP;
-	(void)PWR->CR; /* Complete the DBP write (ES0298 Rev 8, 2.2.9) */
+    PWR->CR &= ~PWR_CR_DBP;
+    (void)PWR->CR; /* Complete the DBP write (ES0298 Rev 8, 2.2.9) */
 }
 
 /** @internal @brief Clears the trust marker without changing the calendar. */
