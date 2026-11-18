@@ -23,7 +23,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-`fao56_app` runs the PC computation kernel. The build produces two test executables: `fao56_test` (58 FAO-56 tests) and `fao56_time_test` (calendar and time-provider tests). CTest runs both registered test suites.
+`fao56_app` runs the PC computation core. The build produces two test executables: `fao56_test` (58 FAO-56 tests) and `fao56_time_test` (calendar and time-provider tests). CTest runs both registered test suites.
 
 To run the FAO-56 computation suite with AddressSanitizer and UndefinedBehaviorSanitizer:
 
@@ -97,8 +97,8 @@ Reference values and tolerances for the FAO-56 computation suite are documented 
 
 Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening pass before this release.
 
-* The kernel is compiled with the following flags in every build (host app, tests, and the kernel library of the MCU firmware): `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
-* C11 standard compliance is strictly enforced, with extensions disabled for `fao56_app` and for the kernel library of `fao56_mcu`: `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
+* The core is compiled with the following flags in every build (host app, tests, and the core library of the MCU firmware): `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
+* C11 standard compliance is strictly enforced, with extensions disabled for `fao56_app` and for the core library of `fao56_mcu`: `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
 * The codebase was checked with the `cppcheck` static analyzer.  
 * The PC test binary was checked with Valgrind (`--leak-check=full --track-origins=yes`), AddressSanitizer, and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined`) to detect memory errors, leaks, and undefined behavior.  
 * Numeric inputs to the calculation layer are validated for `NaN` and infinite values and, where applicable, against valid ranges before use.  
@@ -108,21 +108,20 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 
 ## Limitations and open questions
 
-* Sensor inputs are currently emulated using fixed constants; no physical environmental sensors are integrated yet.  
-* The PC time provider obtains UTC Unix timestamps from `time()`; the STM32 port obtains them from the on-chip RTC. The portable computation kernel does not depend on `time_t`, `localtime()`, RTC registers, or the host time zone. The station date uses the fixed `CONFIG_STATION_UTC_OFFSET_MIN`; daylight-saving transitions are not implemented. The RTC requires a functioning LSE source and explicit time-setting after loss of the backup-domain state. It is not synchronized automatically and does not compensate oscillator drift. See [`RTC commissioning`](Docs/rtc-commissioning.md).  
-* Measurement and calculation state is not persisted between runs. Persistent storage of application data in EEPROM or Flash is not implemented.  
-* The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
-* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support, so double-precision arithmetic runs in software. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. A first measurement on an STM32F446RE (16 MHz, one full `RunDailyCycle()`, report output excluded) took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build). Speed is therefore not currently a reason to change this. The decision remains open for code-size and portability reasons (e.g. targets without an FPU) and pending a comparison with a `float` build.  
-* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Implementing FAO-56 procedures for estimating missing meteorological data remains future work.  
-* The illuminance-based sunshine-duration threshold is an uncalibrated placeholder for WMO’s radiometric [`definition`](https://library.wmo.int/idviewer/68695/358) of sunshine duration — lux and W/m^2 are different physical quantities. This is a known, bounded gap: low-cost proxy sensors have published precedent in agricultural/meteorological IoT, and an experimental fix — a dynamic, astronomy-aware threshold with a calibrated algorithm — remains future calibration work. See [`Docs/illuminance-proxy.md`](Docs/illuminance-proxy.md). In addition, swapping in a pyranometer requires no change to the calculation layer.
+* Sensor inputs are emulated; no physical meteorological sensors are integrated.  
+* Measurement and calculation state is not persisted between runs.  
+* The STM32F446RE validation setup uses the on-chip RTC, which requires a functioning LSE source and explicit time-setting after loss of backup-domain state. Automatic synchronization and drift compensation are not implemented.  
+* Real-time sensor acquisition and FAO-56 procedures for estimating missing meteorological data are not implemented.  
+* Sunshine duration currently uses an uncalibrated illuminance proxy; lux is not equivalent to irradiance.  
+* The computation core uses `double` throughout. On Cortex-M4F, double-precision arithmetic is software-based.
 
-Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
+Detailed findings and open questions are documented in [`Issues v0.1.x`](Docs/issues-v01x.md) and [`Illuminance as a proxy`](Docs/illuminance-proxy.md).
 
 * * *
 
 ## Porting or extending
 
-A port is a directory under [`Port/`](Port) that supplies everything platform-specific: startup code, linker script, device headers, drivers, a `main()`, and a time source. The computation kernel in [`Code/`](Code) is compiled unmodified; use [`Port/STM32F446RE`](Port/STM32F446RE) as the reference. [`Code/04-calculation`](Code/04-calculation) has no dependency on [`Code/01-measurement`](Code/01-measurement) in either direction (see [`Software architecture diagram`](Docs/software-architecture-diagram.md)). Currently `Code/01-measurement` contains PC mock sensors. Physical sensor integration remains future work. Before modifying anything, read [`Verified call graph`](Docs/verified-call-graph.md) and [`Data flow specification`](Docs/data-flow-specification.md). See also “Limitations and open questions of v0.1.x” above.
+The [`Port/`](Port/) directory contains target-specific support for building and running the computation core on an MCU. A target-specific setup supplies startup code, a linker script, device headers, drivers, a `main()`, and a time source. The computation core in [`Code/`](Code) is compiled unmodified; use [`Port/STM32F446RE`](Port/STM32F446RE) as the reference. [`Code/04-calculation`](Code/04-calculation) has no dependency on [`Code/01-measurement`](Code/01-measurement) in either direction (see [`Software architecture diagram`](Docs/software-architecture-diagram.md)). Currently `Code/01-measurement` contains PC mock sensors. Physical sensor integration remains future work. Before modifying anything, read [`Verified call graph`](Docs/verified-call-graph.md) and [`Data flow specification`](Docs/data-flow-specification.md). See also “Limitations and open questions” section above.
 
 The computation core can be reused in additional bare-metal or RTOS-based applications. A separate Zephyr RTOS 4.5 STM32 firmware application is maintained in [`Evapotranspiration Firmware`](https://github.com/cloclacordis/evapotranspiration-firmware).
 
