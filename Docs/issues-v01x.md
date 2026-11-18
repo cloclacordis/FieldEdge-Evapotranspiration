@@ -36,7 +36,7 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Doxygen source documentation`](cloclacordis.github.io/evapocore).  
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Illuminance as a proxy`](illuminance-proxy.md).  
 * [`README`](../README.md).

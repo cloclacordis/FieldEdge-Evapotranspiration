@@ -11,7 +11,7 @@ Verification basis:
 
 The static call structure reported by cflow is consistent with the direct-call sequence observed in the GDB trace.
 
-See also [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
+See also [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).
 
 This document covers the happy path only. `RunDailyCycle()` contains fallback branches (sensor read retries, an atmospheric pressure model fallback) that exist in source but were not exercised in the recorded trace; see “Unverified Branches”. A second binary, `main-test.c`, exercises error-path scenarios by calling lower-layer functions directly rather than through `RunDailyCycle()`. It uses a different call structure and is out of scope for this document.
 
@@ -141,5 +141,5 @@ Present in source, not exercised in the recorded happy path trace:
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).  
 * [`Issues v0.1.x`](issues-v01x.md).

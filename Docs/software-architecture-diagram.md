@@ -104,7 +104,7 @@ Calculation functions operate on validated physical values rather than raw senso
 
 ![](assets/layer-diagram-v01x.png)
 
-**Note.** For dependencies between individual functions, types, and modules, see the [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
+**Note.** For dependencies between individual functions, types, and modules, see the [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).
 
 * * *
 
@@ -114,5 +114,5 @@ Calculation functions operate on validated physical values rather than raw senso
 * [`Verified call graph`](verified-call-graph.md).  
 * [`Data flow specification`](data-flow-specification.md).  
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).  
 * [`README`](../README.md).

@@ -104,6 +104,6 @@ Verify that the daily calculation executes and reports its result.
 ## Related documents
 
 * [`Contracts and conventions`](contracts-and-conventions.md).  
-* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).  
 * [`Software architecture diagram`](software-architecture-diagram.md).  
 * [`README`](../README.md).

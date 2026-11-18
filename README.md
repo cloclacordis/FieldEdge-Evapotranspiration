@@ -1,6 +1,6 @@
 # EvapoCore
 
-[![Host CI](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml) [![MCU Build](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/mcu-build.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/mcu-build.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Host CI](https://github.com/cloclacordis/evapocore/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/evapocore/actions/workflows/build-and-test.yml) [![MCU Build](https://github.com/cloclacordis/evapocore/actions/workflows/mcu-build.yml/badge.svg)](https://github.com/cloclacordis/evapocore/actions/workflows/mcu-build.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## About
 
@@ -135,7 +135,7 @@ The computation core can be reused in additional bare-metal or RTOS-based applic
 * [`Verified call graph`](Docs/verified-call-graph.md).  
 * [`Data flow specification`](Docs/data-flow-specification.md).  
 * [`Contracts and conventions`](Docs/contracts-and-conventions.md).  
-* [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).  
+* [`Doxygen source documentation`](https://cloclacordis.github.io/evapocore).  
 * [`Illuminance as a proxy`](Docs/illuminance-proxy.md).  
 * [`RTC commissioning`](Docs/rtc-commissioning.md).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
