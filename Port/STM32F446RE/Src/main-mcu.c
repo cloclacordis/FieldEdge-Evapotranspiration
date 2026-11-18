@@ -25,7 +25,7 @@ int main(void) {
     UART_Init();
     LD_Init();
 
-    (void)printf("\nFieldEdge-Evapotranspiration -- STM32F446RE\n");
+    (void)printf("\nEvapoCore | STM32F446RE\n");
 
     const Status rtc_status = RTC_Init();
     (void)printf("\nRTC init: %s\n", Status_ToString(rtc_status));

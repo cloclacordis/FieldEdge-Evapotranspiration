@@ -445,7 +445,7 @@ static void test_DateProvider_NullPointer(void) {
 int main(void) {
     UNITY_BEGIN();
 
-    (void)printf("FieldEdge calendar/time tests\n");
+    (void)printf("EvapoCore calendar/time tests\n");
     (void)printf("Calendar conversions use fixed test instants; no PC clock or RTC is read.\n");
 
     RUN_TEST(test_ToEpoch_KnownInstants);

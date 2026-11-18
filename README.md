@@ -1,14 +1,14 @@
-# FieldEdge-Evapotranspiration
+# EvapoCore
 
 [![Host CI](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/build-and-test.yml) [![MCU Build](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/mcu-build.yml/badge.svg)](https://github.com/cloclacordis/FieldEdge-Evapotranspiration/actions/workflows/mcu-build.yml) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## About
 
-**FieldEdge-Evapotranspiration** is open-source software for calculating reference evapotranspiration (ETo) according to the FAO-56 Penman–Monteith methodology, designed for integration into irrigation control and decision-support systems. It comprises a hardware-agnostic C11 computation kernel and an STM32-based embedded implementation. The software aims to provide practical, accessible tools for local communities and small-scale agricultural users and is available for local deployment without reliance on proprietary platforms or centralized services.
+**EvapoCore** is a portable C11 computation core for calculating reference evapotranspiration using the FAO-56 Penman–Monteith method. It is intended for integration into irrigation control and decision-support systems.
 
-**Computation kernel (v0.1.x)** — a C11 implementation of the ETo calculation pipeline. It is complete, tested, and runs on a PC using emulated sensor data. The computation kernel is designed to be reusable independently of the target hardware.
+The repository includes a host-side application and test suite using emulated sensor data, plus an initial bare-metal validation on the STM32F446RE. It also includes a bare-metal RTC driver. Physical meteorological sensors are not integrated.
 
-**Embedded implementation (v0.2.x under development).** The STM32F446RE Nucleo-64 port runs the daily calculation and reports results over UART. The RTC uses the LSE crystal and stores UTC. Initial time is set explicitly through the UART service console, using the host computer as the time source. RTC time retention and trust validation were verified across normal MCU resets while the backup domain remained powered. Sensor inputs remain emulated; this is a hardware smoke test, not a field-ready release. See [`RTC commissioning`](Docs/rtc-commissioning.md) and [`devlog21`](Docs/Devjournal/Devlogs/devlog21-rtc-driver.md).
+The computation core is independent of MCU- and RTOS-specific code and can be integrated into bare-metal or RTOS-based applications. A separate Zephyr RTOS 4.5 STM32 firmware application is maintained in [`Evapotranspiration Firmware`](https://github.com/cloclacordis/evapotranspiration-firmware).
 
 * * *
 
@@ -33,7 +33,7 @@ cmake --build build-sanitize --target fao56_test
 ./build-sanitize/fao56_test
 ```
 
-### STM32F446RE firmware (v0.2.x)
+### STM32F446RE bare-metal validation
 
 Requirements: CMake >= 3.28.3, `arm-none-eabi-gcc` with newlib-nano.
 
@@ -49,7 +49,7 @@ RTC commissioning and time-setting: [`Docs/rtc-commissioning.md`](Docs/rtc-commi
 
 ## System context
 
-The system operates at the edge, acquiring agrometeorological data from sensors, processing and validating the measurements, and calculating ETo. The resulting ETo value is provided to an external irrigation system for local management. Version v0.1.x implements the measurement and computation pipeline on a PC using emulated sensor data. Version v0.2.x is an STM32 implementation under development.
+The intended system acquires agrometeorological data, validates measurements, and calculates ETo for use by an external irrigation system. The current host-side application uses emulated sensor inputs. An initial bare-metal validation has been performed on the STM32F446RE.
 
 See [`Docs/system-context-diagram.md`](Docs/system-context-diagram.md).
 
@@ -65,9 +65,9 @@ The software uses layers with strictly unidirectional dependencies.
 * [`Code/04-calculation`](Code/04-calculation): computation modules (model constants, measured data, and computed data).  
 * [`Code/05-orchestration`](Code/05-orchestration): [`daily-cycle.c`](Code/05-orchestration/daily-cycle.c) runs the measurement-and-calculation pipeline; [`main.c`](Code/05-orchestration/main.c) calls it and reports the result, including which step failed if the cycle does not complete.  
 * [`Code/06-test`](Code/06-test): Unity test suite with [`reference values`](Code/06-test/test-config.h) from FAO-56 worked examples (for PC v0.1.x).  
-* [`Port/`](Port): platform-specific code for target hardware (currently [`STM32F446RE`](Port/STM32F446RE)); it is not part of the kernel — the kernel in `Code/` is built into it unmodified.
+* [`Port/`](Port): target-specific code used to build and run the computation core on an MCU. `Port/STM32F446RE` provides the initial bare-metal validation setup, including an RTC driver and supporting platform code.
 
-The calculation layer is a pure computation kernel. The computation kernel has no knowledge of sensors: it receives validated inputs and returns results. Integration with sensors occurs only in the orchestration layer, specifically in the daily cycle routine (in v0.1.x, sensor readings are provided by PC-based emulation).
+The computation core in `Code/` remains independent of the target platform. A separate Zephyr RTOS 4.5 STM32 firmware application is maintained in [`Evapotranspiration Firmware`](https://github.com/cloclacordis/evapotranspiration-firmware).
 
 See [`Docs/software-architecture-diagram.md`](Docs/software-architecture-diagram.md).
 
@@ -110,11 +110,11 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 
 * Sensor inputs are currently emulated using fixed constants; no physical environmental sensors are integrated yet.  
 * The PC time provider obtains UTC Unix timestamps from `time()`; the STM32 port obtains them from the on-chip RTC. The portable computation kernel does not depend on `time_t`, `localtime()`, RTC registers, or the host time zone. The station date uses the fixed `CONFIG_STATION_UTC_OFFSET_MIN`; daylight-saving transitions are not implemented. The RTC requires a functioning LSE source and explicit time-setting after loss of the backup-domain state. It is not synchronized automatically and does not compensate oscillator drift. See [`RTC commissioning`](Docs/rtc-commissioning.md).  
-* Measurement and calculation state is not persisted between runs. Persistent storage of application data in EEPROM or Flash remains planned for v0.2.x.  
+* Measurement and calculation state is not persisted between runs. Persistent storage of application data in EEPROM or Flash is not implemented.  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
 * All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support, so double-precision arithmetic runs in software. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. A first measurement on an STM32F446RE (16 MHz, one full `RunDailyCycle()`, report output excluded) took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build) — see [`devlog20`](Docs/Devjournal/Devlogs/devlog20-mcu-smoke-test.md). Speed is therefore not currently a reason to change this. The decision remains open for code-size and portability reasons (e.g. targets without an FPU) and pending a comparison with a `float` build.  
-* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Proper estimation is planned alongside real sensor-driver development in v0.2.x, where the required cross-channel data access will exist “naturally”.  
-* The illuminance-based sunshine-duration threshold is an uncalibrated placeholder for WMO’s radiometric [`definition`](https://library.wmo.int/idviewer/68695/358) of sunshine duration — lux and W/m^2 are different physical quantities. This is a known, bounded gap: low-cost proxy sensors have published precedent in agricultural/meteorological IoT, and an experimental fix — a dynamic, astronomy-aware threshold with a calibrated algorithm — is planned for v0.2.x. See [`Docs/illuminance-proxy.md`](Docs/illuminance-proxy.md). In addition, swapping in a pyranometer requires no change to the calculation layer.
+* Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Implementing FAO-56 procedures for estimating missing meteorological data remains future work.  
+* The illuminance-based sunshine-duration threshold is an uncalibrated placeholder for WMO’s radiometric [`definition`](https://library.wmo.int/idviewer/68695/358) of sunshine duration — lux and W/m^2 are different physical quantities. This is a known, bounded gap: low-cost proxy sensors have published precedent in agricultural/meteorological IoT, and an experimental fix — a dynamic, astronomy-aware threshold with a calibrated algorithm — remains future calibration work. See [`Docs/illuminance-proxy.md`](Docs/illuminance-proxy.md). In addition, swapping in a pyranometer requires no change to the calculation layer.
 
 Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
 
@@ -122,7 +122,9 @@ Additional findings are tracked in [`Docs/issues-v01x.md`](Docs/issues-v01x.md).
 
 ## Porting or extending
 
-A port is a directory under [`Port/`](Port) that supplies everything platform-specific: startup code, linker script, device headers, drivers, a `main()`, and a time source. The computation kernel in [`Code/`](Code) is compiled unmodified; use [`Port/STM32F446RE`](Port/STM32F446RE) as the reference. [`Code/04-calculation`](Code/04-calculation) has no dependency on [`Code/01-measurement`](Code/01-measurement) in either direction (see [`Software architecture diagram`](Docs/software-architecture-diagram.md)). Currently `Code/01-measurement` contains PC mock sensors; replacing them with real drivers is planned for v0.2.x. Before modifying anything, read [`Verified call graph`](Docs/verified-call-graph.md) and [`Data flow specification`](Docs/data-flow-specification.md). See also “Limitations and open questions of v0.1.x” above.
+A port is a directory under [`Port/`](Port) that supplies everything platform-specific: startup code, linker script, device headers, drivers, a `main()`, and a time source. The computation kernel in [`Code/`](Code) is compiled unmodified; use [`Port/STM32F446RE`](Port/STM32F446RE) as the reference. [`Code/04-calculation`](Code/04-calculation) has no dependency on [`Code/01-measurement`](Code/01-measurement) in either direction (see [`Software architecture diagram`](Docs/software-architecture-diagram.md)). Currently `Code/01-measurement` contains PC mock sensors. Physical sensor integration remains future work. Before modifying anything, read [`Verified call graph`](Docs/verified-call-graph.md) and [`Data flow specification`](Docs/data-flow-specification.md). See also “Limitations and open questions of v0.1.x” above.
+
+The computation core can be reused in additional bare-metal or RTOS-based applications. A separate Zephyr RTOS 4.5 STM32 firmware application is maintained in [`Evapotranspiration Firmware`](https://github.com/cloclacordis/evapotranspiration-firmware).
 
 * * *
 
