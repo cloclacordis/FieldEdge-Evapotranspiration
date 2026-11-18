@@ -2,7 +2,7 @@
 
 ## Scope
 
-Findings from reading the code, beyond the FAO-56 reference test suite and the static/dynamic checks listed under “Code quality” in the project [`README`](../README.md). Each item is either deferred to v0.2.x (MCU port) with an explicit reason, or is independent of the port and can be addressed on its own schedule. This document complements “Limitations and open questions of v0.1.x” in the `README`.
+Findings from reading the code, beyond the FAO-56 reference test suite and the static/dynamic checks listed under “Code quality” in the project [`README`](../README.md). Each item is either deferred to v0.2.x (MCU port/verification) with an explicit reason, or is independent of the port and can be addressed on its own schedule. This document complements “Limitations and open questions of v0.1.x” in the `README`.
 
 * * *
 
@@ -19,7 +19,7 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 * Location: throughout `Code/`.  
 * First measurement on target: one full `RunDailyCycle()` on an STM32F446RE at 16 MHz took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build). With a daily cadence this does not justify a `float` migration on performance grounds.  
-* Status: open. The remaining questions are code size, portability to targets without an FPU, and a comparison with a `float` build; see [`devlog20`](Devjournal/Devlogs/devlog20-mcu-smoke-test.md).
+* Status: open. The remaining questions are code size, portability to targets without an FPU, and a comparison with a `float` build.
 
 * * *
 
@@ -27,7 +27,7 @@ Findings from reading the code, beyond the FAO-56 reference test suite and the s
 
 * Location: `Code/02-providers/022-configurations/deployment-config.h`; consumed by `SolarRadiation_Calc()` via `SunshineLux_*`.  
 * Illuminance (lux) is not the radiometric quantity (W/m^2) WMO’s sunshine-duration [`definition`](https://library.wmo.int/idviewer/68695/358) uses. Known, documented gap, not an unexamined one — full analysis, citations, and current configuration in [`illuminance-proxy.md`](illuminance-proxy.md).  
-* Status: open. A calibration experiment with two candidate algorithms (astronomy-aware dynamic threshold, variance-based discriminator) is in progress for v0.2.x.
+* Status: open. A calibration experiment with two candidate algorithms (astronomy-aware dynamic threshold, variance-based discriminator) is in progress.
 
 * * *
 

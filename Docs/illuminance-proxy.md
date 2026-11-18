@@ -36,7 +36,7 @@ For additional context on the comparison of different methods/algorithms for det
 
 Using a low-cost sensor as a proxy for the standard-specified instrument has precedent in published work in this exact domain. It does not validate any particular threshold value in this project; it establishes that “cheap proxy sensor, calibrated against the reference method” is an accepted path in this field, not an ad hoc decision.
 
-A calibration effort and two candidate algorithmic improvements — normalizing the threshold by the already-computed extraterrestrial radiation `Ra(day)` to correct the seasonal bias described above, and a short-window illuminance-variance discriminator (call it a “dynamic threshold”), largely independent of absolute calibration — are under active investigation, alongside actual sensor-driver development for v0.2.x. Results will be reflected later here and in the release notes for the version they land in.
+A calibration effort and two candidate algorithmic improvements — normalizing the threshold by the already-computed extraterrestrial radiation `Ra(day)` to correct the seasonal bias described above, and a short-window illuminance-variance discriminator (call it a “dynamic threshold”), largely independent of absolute calibration.
 
 * * *
 

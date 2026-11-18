@@ -4,9 +4,9 @@
 
 Full contract goes on the **declaration** in the `.h` file. A function with no `.h` declaration (`static`, internal to one `.c` file) gets its full contract directly above its **definition** in the `.c` file.
 
-`Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, `STATUS_INTERNAL_ERROR`. Only the first three are returned anywhere in the current v0.1.x codebase; `STATUS_UNAVAILABLE` and `STATUS_INTERNAL_ERROR` are reserved for the v0.2.x stage. Contracts below list only what a function actually returns in v0.1.x.
+`Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, `STATUS_INTERNAL_ERROR`. Only the first three are returned anywhere in the current v0.1.x codebase. Contracts below list only what a function actually returns in v0.1.x.
 
-`Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, and `STATUS_INTERNAL_ERROR`. The portable time API uses `STATUS_UNAVAILABLE` when no valid timestamp is available. The STM32 RTC port (v0.2.x under development) also uses `STATUS_UNAVAILABLE` and `STATUS_INTERNAL_ERROR` for hardware and configuration failures. The contracts below describe the public APIs of the portable `Code/` layer; RTC-specific contracts are defined in `Port/STM32F446RE/Inc/rtc.h`.
+`Status` has five values (see [`status.h`](../Code/03-validation/033-status/status.h)): `STATUS_OK`, `STATUS_NULL_POINTER`, `STATUS_INVALID_VALUE`, `STATUS_UNAVAILABLE`, and `STATUS_INTERNAL_ERROR`. The portable time API uses `STATUS_UNAVAILABLE` when no valid timestamp is available. The STM32 RTC port also uses `STATUS_UNAVAILABLE` and `STATUS_INTERNAL_ERROR` for hardware and configuration failures. The contracts below describe the public APIs of the portable `Code/` layer; RTC-specific contracts are defined in `Port/STM32F446RE/Inc/rtc.h`.
 
 * * *
 
@@ -17,7 +17,7 @@ Full contract goes on the **declaration** in the `.h` file. A function with no `
 
 **B — `Sensor<X>_ReadInstant` and `Sensor<X>_ReadDefault` pair.** Currently identical in structure: `NULL`-checked, return a fixed PC-mock value, and tag it as `SENSOR_VALUE_MEASURED` or `SENSOR_VALUE_DEFAULT`. In v0.1.x, `ReadInstant()` fails only on a `NULL` pointer; a real driver will fail for other reasons as well.
 
-**C — `*_Update(data, value, timestamp)`.** Validates the new value before mutating `*data`; on invalid input, `*data` is left unchanged. Some functions are designed to accumulate a running min/max/mean across repeated calls: `AirTemperatureData`, `AirHumidityData`, `WindSpeedData`, `SunshineLuxData` — the actual “Layer state” accumulators (this temporal accumulation was deferred to v0.2.x). One function (`Calc_AtmosphericParameters`) merely overwrites a single-call result and is documented under Pattern D despite the `_Init()` pairing. See the [`Data flow specification`](data-flow-specification.md).
+**C — `*_Update(data, value, timestamp)`.** Validates the new value before mutating `*data`; on invalid input, `*data` is left unchanged. Some functions are designed to accumulate a running min/max/mean across repeated calls: `AirTemperatureData`, `AirHumidityData`, `WindSpeedData`, `SunshineLuxData` — the actual “Layer state” accumulators. One function (`Calc_AtmosphericParameters`) merely overwrites a single-call result and is documented under Pattern D despite the `_Init()` pairing. See the [`Data flow specification`](data-flow-specification.md).
 
 **D — `Calc_X(...)`.** Pure calculation: reads only its parameters, writes the result via an out parameter, performs no I/O, and maintains no persistent state.
 

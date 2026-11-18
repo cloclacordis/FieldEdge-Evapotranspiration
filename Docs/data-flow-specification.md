@@ -109,7 +109,7 @@ This document specifies the data flow of the `RunDailyCycle()` daily measurement
 
 A view of the same data flow, grouped by the categories defined in “Data model” and “Field reference” above.
 
-![](Devjournal/Devlogs/resources/1908-v01x-data-flow-diagram.png)
+![](assets/data-flow-diagram-v01x.png)
 
 **Note.** The `trace` is omitted from the diagram — it is written by nearly every step.
 

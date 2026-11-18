@@ -116,7 +116,7 @@ int main(void) {
 | `status == STATUS_OK` | `PrintReport` | Yes, exercised in this GDB trace |
 | `status != STATUS_OK` | `PrintStatusAndReturn` | No, present in source, not exercised in this GDB trace |
 
-![](Devjournal/Devlogs/resources/1910-outcome-dispatch-diagram.png)
+![](assets/outcome-dispatch-diagram-v01x.png)
 
 * * *
 

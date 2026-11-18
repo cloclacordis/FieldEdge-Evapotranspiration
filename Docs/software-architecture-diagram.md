@@ -2,7 +2,7 @@
 
 ## Scope
 
-The **FieldEdge-Evapotranspiration** software is organized into five functional subsystems with unidirectional dependencies. The **Orchestration** subsystem coordinates the overall measurement and calculation pipeline. Among the downstream components, the **Measurement** subsystem acquires sensor data, **Providers** supply external and deployment-specific data, **Validation** ensures shared validation and status handling, and **Calculation** executes the ETo computation.
+The **EvapoCore** architecture consists of five functional subsystems with unidirectional dependencies. The **Orchestration** subsystem coordinates the overall measurement and calculation pipeline. Among the downstream components, the **Measurement** subsystem acquires sensor data, **Providers** supply external and deployment-specific data, **Validation** ensures shared validation and status handling, and **Calculation** executes the ETo computation.
 
 The **Calculation** subsystem remains independent of sensor hardware, decoupled from data ingestion, and is invoked by the **Orchestration** subsystem with pre-validated inputs.
 
@@ -13,7 +13,7 @@ The **Calculation** subsystem remains independent of sensor hardware, decoupled 
 The project structure for v0.1.x is as follows.
 
 ```md
-FieldEdge-Evapotranspiration	
+EvapoCore	
   01-measurement	
     011-air-temperature-read	
         air-temperature-read.c	
@@ -100,9 +100,9 @@ The core of the system consists of two independent layers: `measurement` (01) an
 
 `validation` (03) serves as the foundation: every other layer depends on it, and it has no outgoing dependencies of its own. `providers` (02) is a shared supporting layer that also depends on `validation` (03).
 
-Calculation functions operate on validated physical values rather than raw sensor readings. This allows the entire `measurement` (01) layer to be reworked (e.g., to integrate sensor/peripheral drivers in v0.2.x) without touching a single `calculation` (04) module.
+Calculation functions operate on validated physical values rather than raw sensor readings. This allows the entire `measurement` (01) layer to be reworked (e.g., to integrate sensor/peripheral drivers) without touching a single `calculation` (04) module.
 
-![](Devjournal/Devlogs/resources/1906-v01x-layer-diagram.png)
+![](assets/layer-diagram-v01x.png)
 
 **Note.** For dependencies between individual functions, types, and modules, see the [`Doxygen source documentation`](https://cloclacordis.github.io/FieldEdge-Evapotranspiration/files.html).
 

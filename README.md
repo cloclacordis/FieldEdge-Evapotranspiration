@@ -99,8 +99,8 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 
 * The kernel is compiled with the following flags in every build (host app, tests, and the kernel library of the MCU firmware): `-Wall -Wextra -Wpedantic -Wfloat-equal -Wconversion -Wshadow -Werror`.  
 * C11 standard compliance is strictly enforced, with extensions disabled for `fao56_app` and for the kernel library of `fao56_mcu`: `C_STANDARD_REQUIRED ON`, `C_EXTENSIONS OFF`.  
-* The codebase was [`checked`](Docs/Devjournal/Devlogs/devlog18-review-and-improvements-v010.md) with the `cppcheck` static analyzer.  
-* The PC test binary was [`checked`](Docs/Devjournal/Devlogs/devlog19-checks-n-docs.md) with Valgrind (`--leak-check=full --track-origins=yes`), AddressSanitizer, and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined`) to detect memory errors, leaks, and undefined behavior.  
+* The codebase was checked with the `cppcheck` static analyzer.  
+* The PC test binary was checked with Valgrind (`--leak-check=full --track-origins=yes`), AddressSanitizer, and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined`) to detect memory errors, leaks, and undefined behavior.  
 * Numeric inputs to the calculation layer are validated for `NaN` and infinite values and, where applicable, against valid ranges before use.  
 * CI runs host builds and tests, including AddressSanitizer and UndefinedBehaviorSanitizer checks, on every push and pull request. The MCU workflow cross-compiles the STM32 firmware in Debug and Release configurations when `Code/`, `Port/`, or the MCU workflow changes.
 
@@ -112,7 +112,7 @@ Beyond the FAO-56 reference tests, the codebase underwent a deliberate hardening
 * The PC time provider obtains UTC Unix timestamps from `time()`; the STM32 port obtains them from the on-chip RTC. The portable computation kernel does not depend on `time_t`, `localtime()`, RTC registers, or the host time zone. The station date uses the fixed `CONFIG_STATION_UTC_OFFSET_MIN`; daylight-saving transitions are not implemented. The RTC requires a functioning LSE source and explicit time-setting after loss of the backup-domain state. It is not synchronized automatically and does not compensate oscillator drift. See [`RTC commissioning`](Docs/rtc-commissioning.md).  
 * Measurement and calculation state is not persisted between runs. Persistent storage of application data in EEPROM or Flash is not implemented.  
 * The pipeline computes a single daily cycle per run; the sampling model (some sensors read once, illuminance read on a fixed interval) is a PC-development convenience and will be unified into one periodic model once real-time sampling on the MCU is designed.  
-* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support, so double-precision arithmetic runs in software. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. A first measurement on an STM32F446RE (16 MHz, one full `RunDailyCycle()`, report output excluded) took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build) — see [`devlog20`](Docs/Devjournal/Devlogs/devlog20-mcu-smoke-test.md). Speed is therefore not currently a reason to change this. The decision remains open for code-size and portability reasons (e.g. targets without an FPU) and pending a comparison with a `float` build.  
+* All computation uses `double` throughout, though the target MCUs (Arm Cortex-M4F) only have single-precision hardware floating point support, so double-precision arithmetic runs in software. This is a deliberate choice: accuracy took priority over speed for a value computed once per day, and the FAO-56 reference values were validated at `double` precision. A first measurement on an STM32F446RE (16 MHz, one full `RunDailyCycle()`, report output excluded) took 77,749 CPU cycles (about 4.9 ms; preliminary, not yet measured with an optimized build). Speed is therefore not currently a reason to change this. The decision remains open for code-size and portability reasons (e.g. targets without an FPU) and pending a comparison with a `float` build.  
 * Sensor fallback values (`Sensor*_ReadDefault()`) are fixed constants, not FAO-56’s climatic-data-estimation procedures (e.g. Hargreaves-based Rs, RH from Tmin) — adequate for occasional sensor failure, but not a substitute for a genuinely missing sensor. Implementing FAO-56 procedures for estimating missing meteorological data remains future work.  
 * The illuminance-based sunshine-duration threshold is an uncalibrated placeholder for WMO’s radiometric [`definition`](https://library.wmo.int/idviewer/68695/358) of sunshine duration — lux and W/m^2 are different physical quantities. This is a known, bounded gap: low-cost proxy sensors have published precedent in agricultural/meteorological IoT, and an experimental fix — a dynamic, astronomy-aware threshold with a calibrated algorithm — remains future calibration work. See [`Docs/illuminance-proxy.md`](Docs/illuminance-proxy.md). In addition, swapping in a pyranometer requires no change to the calculation layer.
 
@@ -139,14 +139,6 @@ The computation core can be reused in additional bare-metal or RTOS-based applic
 * [`Illuminance as a proxy`](Docs/illuminance-proxy.md).  
 * [`RTC commissioning`](Docs/rtc-commissioning.md).  
 * [`Issues v0.1.x`](Docs/issues-v01x.md).
-
-* * *
-
-## Development journal
-
-Step-by-step development notes (in Russian) are in [`Docs/Devjournal/Devlogs`](Docs/Devjournal/Devlogs).  
-See [`Docs/Devjournal/Disclaimer.md`](Docs/Devjournal/Disclaimer.md) for context on the format and purpose of those notes.  
-See [`Docs/Devjournal/Index.md`](Docs/Devjournal/Index.md) for the devlog table of contents and English synopses.
 
 * * *
 
